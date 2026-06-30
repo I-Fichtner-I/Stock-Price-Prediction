@@ -1,7 +1,7 @@
 # Prognose von Aktienkursen mittels maschinellen Lernens
 ## Am Beispiel der NVIDIA-Aktie (LSTM, ARIMA/SARIMA, Baselines)
 
-> **Seminar-/Termpaper-Begleit-Notebook** · Reproduzierbares Python-Experiment ·
+> **Seminar-/Termpaper-Notebook** · Reproduzierbares Python-Experiment ·
 > Zeitreihenanalyse & Deep Learning
 
 ---
