@@ -85,48 +85,48 @@ Währung   : USD
 │       │                                                         │
 │       ▼                                                         │
 │  Explorative Datenanalyse (EDA)                                 │
-│   ├── Deskriptive Statistik & Verteilungsanalyse               │
-│   ├── ADF-Test + KPSS-Test (Stationarität)                     │
-│   ├── ACF / PACF  (Autokorrelationsstruktur)                   │
-│   ├── Renditeanalyse (Log-Renditen, Volatilität)               │
-│   └── Ereignisanalyse (Kurssprünge >= |5 %|)                   │
+│   ├── Deskriptive Statistik & Verteilungsanalyse                │
+│   ├── ADF-Test + KPSS-Test (Stationarität)                      │
+│   ├── ACF / PACF  (Autokorrelationsstruktur)                    │
+│   ├── Renditeanalyse (Log-Renditen, Volatilität)                │
+│   └── Ereignisanalyse (Kurssprünge >= |5 %|)                    │
 │       │                                                         │
 │       ▼                                                         │
 │  Feature Engineering                                            │
-│   ├── Technische Indikatoren (MA5/MA20/MA60, EMA, BB, RSI)    │
-│   ├── Lag-Features (t-1 ... t-5)                               │
-│   ├── Rendite- & Volatilitätsmerkmale                          │
-│   └── Kalendermerkmale (Wochentag, Monat)                      │
+│   ├── Technische Indikatoren (MA5/MA20/MA60, EMA, BB, RSI)      │
+│   ├── Lag-Features (t-1 ... t-5)                                │
+│   ├── Rendite- & Volatilitätsmerkmale                           │
+│   └── Kalendermerkmale (Wochentag, Monat)                       │
 │       │                                                         │
 │       ▼                                                         │
-│  Chronologischer Train / Val / Test-Split (70 / 15 / 15 %)    │
+│  Chronologischer Train / Val / Test-Split (70 / 15 / 15 %)      │
 │       │                                                         │
 │       ▼                                                         │
-│  MinMaxScaler  (kalibriert ausschliesslich auf Trainingsdaten) │
+│  MinMaxScaler  (kalibriert ausschliesslich auf Trainingsdaten)  │
 │       │                                                         │
 │       ▼                                                         │
-│  Sliding-Window-Transformation  (Fensterlänge W = 60 Tage)    │
+│  Sliding-Window-Transformation  (Fensterlänge W = 60 Tage)      │
 │       │                                                         │
-│       ├──────────────────────────────┐                         │
-│       ▼                              ▼                         │
-│  Statistische Modelle            LSTM-Modell                   │
-│   ├── Naive Baseline              ├── Architektur-Suche        │
-│   ├── Moving-Average-Baseline     │   (Schichten, Neuronen,    │
-│   └── ARIMA/SARIMA (AIC-Suche)   │    Dropout, Lernrate)      │
-│                                   └── Walk-Forward-CV          │
-│       │                              │                         │
-│       └──────────────┬───────────────┘                         │
-│                      ▼                                         │
-│  Evaluation (MAE, RMSE, MAPE, sMAPE, Theil's U, DA)           │
-│                      │                                         │
-│                      ▼                                         │
-│  Explainability (SHAP / Permutationswichtigkeit)               │
-│                      │                                         │
-│                      ▼                                         │
-│  Trading-Simulation (Signalstrategie vs. Buy-and-Hold)         │
-│                      │                                         │
-│                      ▼                                         │
-│  Diskussion & Fazit                                            │
+│       ├──────────────────────────────┐                          │
+│       ▼                              ▼                          │
+│  Statistische Modelle            LSTM-Modell                    │
+│   ├── Naive Baseline              ├── Architektur-Suche         │
+│   ├── Moving-Average-Baseline     │   (Schichten, Neuronen,     │
+│   └── ARIMA/SARIMA (AIC-Suche)   │    Dropout, Lernrate)        │
+│                                   └── Walk-Forward-CV           │
+│       │                              │                          │
+│       └──────────────┬───────────────┘                          │
+│                      ▼                                          │
+│  Evaluation (MAE, RMSE, MAPE, sMAPE, Theil's U, DA)             │
+│                      │                                          │
+│                      ▼                                          │
+│  Explainability (SHAP / Permutationswichtigkeit)                │
+│                      │                                          │
+│                      ▼                                          │
+│  Trading-Simulation (Signalstrategie vs. Buy-and-Hold)          │
+│                      │                                          │
+│                      ▼                                          │
+│  Diskussion & Fazit                                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -170,7 +170,7 @@ Eingabeschicht
   ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  LSTM-Schicht 1                                                 │
-│    Einheiten: {32, 64, 128}  (Hyperparameter-Suche)            │
+│    Einheiten: {32, 64, 128}  (Hyperparameter-Suche)             │
 │    return_sequences: True  (falls mehrstufig)                   │
 │    Dropout: {0.0, 0.2, 0.3}                                     │
 ├─────────────────────────────────────────────────────────────────┤
