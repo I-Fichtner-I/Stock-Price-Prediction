@@ -18,6 +18,7 @@
 8. [Reproduzierbarkeit & Ausführung](#8-reproduzierbarkeit--ausführung)
 9. [Projektstruktur](#9-projektstruktur)
 10. [Abhängigkeiten](#10-abhängigkeiten)
+11. [To-Do & Projektplan](#11-to-do--projektplan)
 
 ---
 
@@ -485,3 +486,200 @@ stock-price-prediction/
 
 *Alle Visualisierungen, Metriken und Modellgewichte werden bei der Ausführung
 des Notebooks generiert. Sie sind nicht Teil des Repository.*
+
+---
+
+## 11  To-Do & Projektplan
+
+Dieser Abschnitt dokumentiert offene Verbesserungspotenziale, geordnet nach
+**Priorität** und **Aufwand**. Die Kategorien orientieren sich am
+wissenschaftlichen Erkenntnisgewinn: Daten → Modelle → Evaluation → Engineering.
+
+### Legende
+
+```
+Priorität:  [H] Hoch · [M] Mittel · [N] Niedrig
+Aufwand:    [S] Klein (<1 Tag) · [M] Mittel (2–5 Tage) · [L] Gross (>1 Woche)
+Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
+```
+
+---
+
+### Phase 1 — Wissenschaftliche Robustheit  *(kurzfristig)*
+
+```
+[ ] [H][S]  Metriktabelle mit echten Zahlenwerten befüllen
+            --> Notebook einmal vollständig ausführen, results/*.csv einlesen,
+                Tabelle in Abschnitt 6.1 automatisch befüllen (nbconvert + Jinja).
+
+[ ] [H][M]  Statistische Signifikanztests ergänzen
+            --> Diebold-Mariano-Test: prüft, ob LSTM-Fehler signifikant kleiner
+                als Baseline-Fehler (H0: gleiche Prognosegüte).
+            --> Wilcoxon-Vorzeichen-Rang-Test auf Residuen.
+            --> Implementierung: statsmodels.stats.diagnostic.acorr_ljungbox
+                bereits vorhanden; dm_test als eigenständige Funktion ergänzen.
+
+[ ] [H][S]  Konfidenzintervalle / Prognoseintervalle ausgeben
+            --> Bootstrap-Methode auf LSTM-Residuen (1 000 Resamplings).
+            --> Ziel: Visualisierung von 80 %- und 95 %-Bändern im Ist/Soll-Plot.
+
+[ ] [M][S]  KPSS-Testwerte in Stationaritätstabelle (Abschnitt 6.3) eintragen
+            --> Automatisch aus Notebook-Output extrahieren.
+
+[ ] [M][M]  Residualdiagnose für LSTM ergänzen
+            --> ACF/PACF der Testresiduen, Ljung-Box-Test auf Autokorrelation.
+            --> Quantil-Quantil-Plot (QQ-Plot) für Normalverteilungsannahme.
+```
+
+---
+
+### Phase 2 — Modellbreite  *(mittelfristig)*
+
+```
+[ ] [H][M]  Transformer / Temporal Fusion Transformer (TFT) hinzufügen
+            --> Attention-Mechanismus als Alternative zu LSTM-Gating.
+            --> Paket: pytorch-forecasting oder neuralforecast (Nixtla).
+            --> Erlaubt direkte Quantilsprognosen ohne Bootstrap.
+
+[ ] [H][M]  Gradient Boosting (XGBoost / LightGBM) als weiteres Referenzmodell
+            --> Kein Sequence-Modell, aber starker tabellarischer Baseline.
+            --> Direkt auf Feature-Matrix (ohne Sliding Window) anwendbar.
+            --> Vergleich: Entscheidet, ob der Sequence-Anteil des LSTM hilft.
+
+[ ] [M][L]  GRU (Gated Recurrent Unit) als LSTM-Variante
+            --> Geringere Parameterzahl, oft vergleichbare Genauigkeit.
+            --> Gleicher Hyperparameter-Suchraum wie LSTM -- fairer Vergleich.
+
+[ ] [M][M]  Multi-Step-Forecasting (Horizont h = 5, 10, 20 Handelstage)
+            --> Direkte vs. rekursive Mehrschritt-Strategie vergleichen.
+            --> Separate Fehlermetriken je Horizont (MAE@h, RMSE@h).
+
+[ ] [N][S]  Prophet (Meta) als saisonales Baseline-Modell
+            --> Robustes additives Modell mit Trendbrüchen und Feiertagen.
+            --> Schnell implementiert, gute Interpretierbarkeit.
+```
+
+---
+
+### Phase 3 — Datenerweiterung  *(mittelfristig)*
+
+```
+[ ] [H][M]  Sentiment-Features aus Finanznachrichten integrieren
+            --> Quellen: NewsAPI, VADER (lexikonbasiert) oder FinBERT (transformer).
+            --> Täglicher Sentiment-Score als zusätzliches Feature.
+            --> Hypothese: Nachrichtensentiment verbessert Richtungsgenauigkeit (DA).
+
+[ ] [H][M]  Makroökonomische Kontextvariablen ergänzen
+            --> VIX (Volatilitätsindex), Fed Funds Rate, USD/EUR-Kurs, SOX-Index.
+            --> Alle tagesaktuell via yfinance oder FRED (fredapi) verfügbar.
+
+[ ] [M][M]  Multivariate Zeitreihe: weitere Halbleiteraktien einbeziehen
+            --> AMD, Intel, TSMC als korrelierte Zeitreihen.
+            --> Erlaubt Cross-Asset-Signale im LSTM (vektorieller Input).
+
+[ ] [M][L]  Orderbook-/Intraday-Daten (15-Min-Intervalle)
+            --> Feinere Zeitauflösung für kurzfristige Prognosen.
+            --> Höheres Rauschen, aber potentiell stärkere Autokorrelationsstruktur.
+
+[ ] [N][S]  Erweiterung des Beobachtungszeitraums (ab 2015)
+            --> Schliesst weitere Marktregimes ein (GPU-Boom 2016/17, COVID-Crash).
+```
+
+---
+
+### Phase 4 — Evaluation & Backtesting  *(mittelfristig)*
+
+```
+[ ] [H][M]  Realistische Trading-Simulation ausbauen
+            --> Transaktionskosten (Spread + Kommission ca. 0.1 %) berücksichtigen.
+            --> Slippage-Modell für grosse Positionen.
+            --> Risikokennzahlen: Sharpe Ratio, Maximum Drawdown, Calmar Ratio.
+
+[ ] [H][M]  Out-of-Sample-Test auf anderer Aktie (Generalisierbarkeit)
+            --> Gleiche Pipeline auf AMD oder Tesla anwenden.
+            --> Prüft, ob Ergebnisse ticker-spezifisch oder allgemein gültig sind.
+
+[ ] [M][M]  Regime-aware Evaluation
+            --> Testmenge nach Marktregime aufteilen (Trend, Seitwärts, Crash).
+            --> Separate Metriken je Regime: Wo versagen die Modelle?
+
+[ ] [M][S]  Benchmark gegen Random-Walk-Simulation
+            --> Monte-Carlo-Simulation (1 000 Pfade) als statistischer Untergrenze.
+            --> Vergleich: Liegt LSTM-RMSE unter dem Erwartungswert des Random Walk?
+```
+
+---
+
+### Phase 5 — Code-Qualität & Engineering  *(laufend)*
+
+```
+[ ] [H][M]  Notebook in modulare Python-Pakete refaktorieren
+            --> src/data/loader.py, src/features/engineering.py,
+                src/models/lstm.py, src/evaluation/metrics.py
+            --> Notebook wird zum reinen Präsentations-Layer (ruft Module auf).
+
+[ ] [H][S]  Automatische Metriken-Befüllung im README via CI
+            --> GitHub Action: führt Notebook headless aus, extrahiert
+                results/metrics_comparison.csv, aktualisiert README-Tabelle.
+
+[ ] [M][M]  Unit-Tests für Kernfunktionen
+            --> pytest: Feature-Engineering, Sliding-Window, Metrikberechnungen.
+            --> Verhindert stille Regressionen bei Refaktorierungen.
+
+[ ] [M][M]  Interaktive Visualisierungen (Plotly / Dash)
+            --> Zoom-fähige Kursverläufe, interaktiver Modellvergleich.
+            --> Exportierbar als HTML (kein Server nötig).
+
+[ ] [N][L]  MLflow / Weights & Biases für Experiment-Tracking
+            --> Automatisches Logging von Hyperparametern, Metriken, Artefakten.
+            --> Vergleich vieler Runs ohne manuelle Tabellenpflege.
+
+[ ] [N][M]  Docker-Container für vollständige Reproduzierbarkeit
+            --> Dockerfile mit pinned Versionen (requirements.txt + system libs).
+            --> Notebook läuft identisch auf jeder Maschine.
+```
+
+---
+
+### Priorisierungsmatrix
+
+```
+              AUFWAND
+              Klein (S)       Mittel (M)       Gross (L)
+            ┌────────────────┬────────────────┬────────────────┐
+  HOCH  [H] │ Metriktabelle  │ Signifikanztests│ TFT/Transformer│
+            │ KPSS-Werte     │ XGBoost Baseline│                │
+            │ Konfidenzband  │ Sentiment-Feat. │                │
+            │                │ Trading-Sim.    │                │
+            │                │ Modularisierung │                │
+            ├────────────────┼────────────────┼────────────────┤
+  MITTEL [M]│ Prophet        │ GRU-Vergleich  │ GRU (gross)    │
+            │ Random-Walk-   │ Multi-Step-FC  │ Intraday-Daten │
+            │ Benchmark      │ Makrodaten     │                │
+            │                │ Regime-Eval.   │                │
+            │                │ Unit-Tests     │                │
+            │                │ Plotly-Viz.    │                │
+            ├────────────────┼────────────────┼────────────────┤
+  NIEDRIG[N]│ Zeitraum-Ext.  │ Docker         │ MLflow         │
+            │                │                │                │
+            └────────────────┴────────────────┴────────────────┘
+
+  Empfohlene Startreihenfolge:
+  1. Metriktabelle befüllen (H/S) -- sofortiger Mehrwert, kein Aufwand
+  2. Konfidenzintervalle (H/S)    -- stärkt wissenschaftliche Aussagekraft
+  3. Signifikanztests (H/M)       -- ohne diese sind Vergleiche angreifbar
+  4. XGBoost Baseline (H/M)       -- klärt, ob Sequence-Modell überhaupt hilft
+  5. Sentiment-Features (H/M)     -- grösste potenzielle DA-Verbesserung
+```
+
+---
+
+### Offene Forschungsfragen
+
+| # | Frage | Adressiert durch |
+|---|-------|-----------------|
+| F1 | Verbessert Sentiment-Information die Richtungsgenauigkeit messbar (DA > 55 %)? | Phase 3: Sentiment-Features |
+| F2 | Generalisiert die Pipeline auf andere Ticker ohne Neutraining? | Phase 4: Out-of-Sample-Test |
+| F3 | Schlägt ein Transformer das LSTM auf dieser Datenbasis? | Phase 2: TFT |
+| F4 | Ist der Mehrwert des LSTM gegenüber XGBoost durch den Sequence-Anteil bedingt? | Phase 2: XGBoost |
+| F5 | Wie verhalten sich die Modelle in unterschiedlichen Marktregimes (Crash vs. Boom)? | Phase 4: Regime-Eval |
