@@ -512,6 +512,7 @@ stock-price-prediction/
 |-------|---------|-----------|---------|
 | `tensorflow-cpu` | >= 2.16 | LSTM-Training | MLP via `scikit-learn` |
 | `shap` | >= 0.45 | Feature-Explainability | Permutationswichtigkeit |
+| `plotly` | >= 5.20 | Interaktive Visualisierung (Kap. 7.2d) | Zelle wird übersprungen |
 
 ---
 
@@ -673,9 +674,10 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> pytest: Feature-Engineering, Sliding-Window, Metrikberechnungen.
             --> Verhindert stille Regressionen bei Refaktorierungen.
 
-[ ] [M][M]  Interaktive Visualisierungen (Plotly / Dash)
-            --> Zoom-fähige Kursverläufe, interaktiver Modellvergleich.
-            --> Exportierbar als HTML (kein Server nötig).
+[x] [M][M]  Interaktive Visualisierungen (Plotly / Dash)
+            --> Zoom-fähige Kursverläufe, interaktiver Modellvergleich (Kap. 7.2d).
+            --> Exportiert als eigenständige HTML-Datei (results/interactive_forecast.html,
+                kein Server nötig); optionale Abhängigkeit mit sauberem Fallback.
 
 [ ] [N][L]  MLflow / Weights & Biases für Experiment-Tracking
             --> Automatisches Logging von Hyperparametern, Metriken, Artefakten.
