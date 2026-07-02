@@ -270,6 +270,7 @@ Fold 5:  [███████████████████████�
 
 ### 6.1  Modellvergleich (Testmenge)
 
+<!-- AUTO-GENERATED:METRICS_TABLE:START -->
 ```
 Modell               │ MAE (USD) │ RMSE (USD) │ MAPE (%) │ Theil's U │ DA (%)
 ─────────────────────┼───────────┼────────────┼──────────┼───────────┼──────────
@@ -281,6 +282,11 @@ LSTM (Log-Renditen)  │     –     │      –     │    –     │    – 
 ─────────────────────┴───────────┴────────────┴──────────┴───────────┴──────────
 Werte werden bei Notebook-Ausführung befüllt (→ results/metrics_comparison.csv)
 ```
+<!-- AUTO-GENERATED:METRICS_TABLE:END -->
+
+*Wird automatisch aus `results/metrics_comparison.csv` befüllt — siehe
+[`_update_readme_results.py`](_update_readme_results.py) (nach Notebook-Ausführung
+ausführen).*
 
 ### 6.2  Schlüsselbefund: Lag-Phänomen
 
@@ -312,13 +318,17 @@ r_t = ln(P_t / P_{t-1})
 
 ### 6.3  Stationaritätsanalyse (ADF + KPSS)
 
+<!-- AUTO-GENERATED:STATIONARITY_TABLE:START -->
 | Zeitreihe | ADF p-Wert | KPSS-Befund | Schluss |
 |-----------|-----------|-------------|---------|
 | Close (Niveau) | > 0.05 | stationär abgelehnt | **nicht stationär** |
 | Log-Renditen | < 0.01 | stationär | **stationär** |
 | Einfache Renditen | < 0.01 | stationär | stationär |
+<!-- AUTO-GENERATED:STATIONARITY_TABLE:END -->
 
-*(Genaue Testwerte werden bei Notebook-Ausführung eingetragen)*
+*Wird automatisch aus `results/stationarity_tests.csv` befüllt — siehe
+[`_update_readme_results.py`](_update_readme_results.py) (nach Notebook-Ausführung
+ausführen).*
 
 ---
 
@@ -406,7 +416,26 @@ jupyter nbconvert --to notebook --execute --inplace \
 
 # (optional) Notebook aus dem Generator-Skript neu erzeugen
 python _build_notebook.py
+
+# (optional) README-Ergebnistabellen (6.1 & 6.3) aus results/*.csv befüllen
+python _update_readme_results.py
 ```
+
+### Ausführung via Docker
+
+Für eine vollständig reproduzierbare Umgebung (unabhängig vom lokalen
+Python-Setup) steht ein `Dockerfile` bereit:
+
+```bash
+# Image bauen
+docker build -t stock-price-prediction .
+
+# Jupyter Notebook im Container starten (Port 8888)
+docker run --rm -p 8888:8888 stock-price-prediction
+```
+
+Der ausgegebene Link (inkl. Token) öffnet Jupyter im Browser; das Notebook
+läuft darin mit exakt den in `requirements.txt` gepinnten Abhängigkeiten.
 
 ### Reproduzierbarkeitsgarantien
 
@@ -444,6 +473,9 @@ stock-price-prediction/
 ├── NVIDIA_Kursprognose_LSTM.ipynb   # Hauptabgabe — vollständiges Notebook
 ├── requirements.txt                  # Python-Abhängigkeiten (Kern)
 ├── _build_notebook.py                # Generator-Skript (reproduzierbare Zellstruktur)
+├── _update_readme_results.py         # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
+├── Dockerfile                        # Containerisierte, reproduzierbare Ausführung
+├── .dockerignore                     # Ausschlüsse für den Docker-Build-Kontext
 └── README.md                         # Diese Datei
 ```
 
@@ -508,27 +540,31 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
 ### Phase 1 — Wissenschaftliche Robustheit  *(kurzfristig)*
 
 ```
-[ ] [H][S]  Metriktabelle mit echten Zahlenwerten befüllen
-            --> Notebook einmal vollständig ausführen, results/*.csv einlesen,
-                Tabelle in Abschnitt 6.1 automatisch befüllen (nbconvert + Jinja).
+[~] [H][S]  Metriktabelle mit echten Zahlenwerten befüllen
+            --> Automatisierung steht (_update_readme_results.py liest results/*.csv
+                und befüllt Abschnitt 6.1 zwischen AUTO-GENERATED-Markern).
+            --> Offen: einmal mit echten Yahoo-Finance-Daten ausführen und README
+                committen (in dieser Sandbox kein Netzwerkzugriff auf Yahoo Finance).
 
-[ ] [H][M]  Statistische Signifikanztests ergänzen
-            --> Diebold-Mariano-Test: prüft, ob LSTM-Fehler signifikant kleiner
-                als Baseline-Fehler (H0: gleiche Prognosegüte).
-            --> Wilcoxon-Vorzeichen-Rang-Test auf Residuen.
-            --> Implementierung: statsmodels.stats.diagnostic.acorr_ljungbox
-                bereits vorhanden; dm_test als eigenständige Funktion ergänzen.
+[x] [H][M]  Statistische Signifikanztests ergänzen
+            --> Diebold-Mariano-Test (Harvey/Leybourne/Newbold-korrigiert): prüft,
+                ob LSTM-Fehler signifikant kleiner als Baseline-Fehler sind
+                (H0: gleiche Prognosegüte). Neue Funktion diebold_mariano() (Kap. 7.1c).
+            --> Wilcoxon-Vorzeichen-Rang-Test auf |Fehler LSTM| vs. |Fehler Naiv|
+                (Kap. 7.1c), als nichtparametrische Robustheitsprüfung.
 
-[ ] [H][S]  Konfidenzintervalle / Prognoseintervalle ausgeben
+[x] [H][S]  Konfidenzintervalle / Prognoseintervalle ausgeben
             --> Bootstrap-Methode auf LSTM-Residuen (1 000 Resamplings).
             --> Ziel: Visualisierung von 80 %- und 95 %-Bändern im Ist/Soll-Plot.
 
-[ ] [M][S]  KPSS-Testwerte in Stationaritätstabelle (Abschnitt 6.3) eintragen
+[~] [M][S]  KPSS-Testwerte in Stationaritätstabelle (Abschnitt 6.3) eintragen
             --> Automatisch aus Notebook-Output extrahieren.
+            --> Export (stationarity_tests.csv) und Befüll-Skript stehen; Tabelle
+                selbst wird erst mit echten Daten final committet (s.o.).
 
-[ ] [M][M]  Residualdiagnose für LSTM ergänzen
-            --> ACF/PACF der Testresiduen, Ljung-Box-Test auf Autokorrelation.
-            --> Quantil-Quantil-Plot (QQ-Plot) für Normalverteilungsannahme.
+[x] [M][M]  Residualdiagnose für LSTM ergänzen
+            --> ACF/PACF der Testresiduen, Ljung-Box-Test auf Autokorrelation (Kap. 7.2c).
+            --> Quantil-Quantil-Plot (QQ-Plot) + Jarque-Bera für Normalverteilungsannahme.
 ```
 
 ---
@@ -603,7 +639,7 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Testmenge nach Marktregime aufteilen (Trend, Seitwärts, Crash).
             --> Separate Metriken je Regime: Wo versagen die Modelle?
 
-[ ] [M][S]  Benchmark gegen Random-Walk-Simulation
+[x] [M][S]  Benchmark gegen Random-Walk-Simulation
             --> Monte-Carlo-Simulation (1 000 Pfade) als statistischer Untergrenze.
             --> Vergleich: Liegt LSTM-RMSE unter dem Erwartungswert des Random Walk?
 ```
@@ -634,7 +670,7 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Automatisches Logging von Hyperparametern, Metriken, Artefakten.
             --> Vergleich vieler Runs ohne manuelle Tabellenpflege.
 
-[ ] [N][M]  Docker-Container für vollständige Reproduzierbarkeit
+[x] [N][M]  Docker-Container für vollständige Reproduzierbarkeit
             --> Dockerfile mit pinned Versionen (requirements.txt + system libs).
             --> Notebook läuft identisch auf jeder Maschine.
 ```

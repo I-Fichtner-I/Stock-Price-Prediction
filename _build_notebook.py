@@ -156,7 +156,8 @@ warnings.filterwarnings("ignore")
 %matplotlib inline
 
 # --- Statistik / Zeitreihen -------------------------------------------------
-from statsmodels.tsa.stattools import adfuller, kpss, acf, pacf, acorr_ljungbox
+from statsmodels.tsa.stattools import adfuller, kpss, acf, pacf
+from statsmodels.stats.diagnostic import acorr_ljungbox
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from scipy import stats
 
@@ -448,6 +449,8 @@ wenn **beide Tests übereinstimmen**: ADF verwirft H₀ *und* KPSS verwirft H₀
 """)
 
 code(r"""
+stationarity_results = {}   # name -> dict(adf_stat, adf_p, kpss_stat, kpss_p, verdict)
+
 def adf_report(series, name):
     s = series.dropna()
     res = adfuller(s, autolag="AIC")
@@ -457,7 +460,7 @@ def adf_report(series, name):
     print(f"  krit. Werte   : " + ", ".join(f"{k}={v:.2f}" for k, v in res[4].items()))
     verdict = "STATIONÄR (H0 verworfen)" if res[1] < 0.05 else "NICHT stationär (H0 nicht verworfen)"
     print(f"  => {verdict}\n")
-    return res[1]
+    return res[0], res[1]
 
 def kpss_report(series, name, regression="c"):
     s = series.dropna()
@@ -470,7 +473,7 @@ def kpss_report(series, name, regression="c"):
     print(f"  krit. Werte   : " + ", ".join(f"{k}={v:.3f}" for k, v in crit.items()))
     verdict = "NICHT stationär (H0 verworfen)" if p < 0.05 else "STATIONÄR (H0 nicht verworfen)"
     print(f"  => {verdict}\n")
-    return p
+    return stat, p
 
 def combined_verdict(adf_p, kpss_p, name):
     adf_stat  = adf_p  < 0.05   # True = verworfen = stationär-Signal
@@ -484,14 +487,20 @@ def combined_verdict(adf_p, kpss_p, name):
     else:
         v = "UNSCHLÜSSIG  (ADF: nicht stationär, KPSS: stationär — mehr Daten nötig)"
     print(f"==> Kombiniertes Urteil [{name}]: {v}\n")
+    return v
 
-p_adf_lv  = adf_report(df["Close"],  "Schlusskurs (Level)")
-p_kpss_lv = kpss_report(df["Close"], "Schlusskurs (Level)")
-combined_verdict(p_adf_lv, p_kpss_lv, "Schlusskurs")
+def run_stationarity_tests(series, name):
+    adf_stat, adf_p   = adf_report(series, name)
+    kpss_stat, kpss_p = kpss_report(series, name)
+    verdict = combined_verdict(adf_p, kpss_p, name)
+    stationarity_results[name] = {
+        "ADF_stat": adf_stat, "ADF_p": adf_p,
+        "KPSS_stat": kpss_stat, "KPSS_p": kpss_p, "Verdict": verdict,
+    }
 
-p_adf_rt  = adf_report(df["Return"],  "Tagesrendite")
-p_kpss_rt = kpss_report(df["Return"], "Tagesrendite")
-combined_verdict(p_adf_rt, p_kpss_rt, "Tagesrendite")
+run_stationarity_tests(df["Close"],      "Close (Niveau)")
+run_stationarity_tests(df["Return"],     "Einfache Renditen")
+run_stationarity_tests(df["LogReturn"],  "Log-Renditen")
 """)
 
 md(r"""
@@ -1409,6 +1418,132 @@ plt.tight_layout(); plt.show()
 """)
 
 md(r"""
+### 7.1b  Benchmark gegen Monte-Carlo-Random-Walk-Simulation
+
+Reicht reiner Zufall aus, um ähnliche Fehlerwerte wie die trainierten Modelle
+zu erzielen? Wir simulieren $N=1\,000$ **Random-Walk-Pfade** (geometrische
+Brownsche Bewegung) über den Testzeitraum, kalibriert ausschließlich auf den
+**Trainings**-Tagesrenditen ($\mu$, $\sigma$ der Log-Renditen), und vergleichen
+die resultierende RMSE-Verteilung mit dem tatsächlichen LSTM- und Naiv-Fehler.
+Liegt der LSTM-RMSE innerhalb dieser Zufallsverteilung, liefert das Modell
+keinen messbaren Mehrwert gegenüber reinem Rauschen.
+""")
+
+code(r"""
+N_PATHS = 1000
+rng_mc = np.random.default_rng(SEED)
+
+train_log_ret = feat["LogReturn"].values[idx_train]
+mu_mc, sigma_mc = train_log_ret.mean(), train_log_ret.std()
+
+h  = len(y_test_price)                        # Prognosehorizont (Testtage)
+p0 = feat[TARGET].values[idx_test[0] - 1]     # letzter bekannter Kurs vor dem Testfenster
+
+shocks   = rng_mc.normal(mu_mc, sigma_mc, size=(N_PATHS, h))
+mc_paths = p0 * np.exp(np.cumsum(shocks, axis=1))
+mc_rmse  = np.sqrt(((mc_paths - y_test_price) ** 2).mean(axis=1))
+
+lstm_rmse_mc  = res_df.loc[model_name, "RMSE"]
+naive_rmse_mc = res_df.loc["Naiv (P_{t-1})", "RMSE"]
+pctile        = (mc_rmse < lstm_rmse_mc).mean() * 100
+
+print(f"Random-Walk-Simulation: {N_PATHS} Pfade, mu={mu_mc:.5f}, sigma={sigma_mc:.5f} (taeglich, aus Trainingsdaten)")
+print(f"RMSE Monte-Carlo (Median)     : {np.median(mc_rmse):.3f} USD")
+print(f"RMSE Monte-Carlo (5.-95. Pct.): [{np.percentile(mc_rmse, 5):.3f}, {np.percentile(mc_rmse, 95):.3f}] USD")
+print(f"RMSE {model_name:<24}: {lstm_rmse_mc:.3f} USD  (besser als {pctile:.1f}% der Zufallspfade)")
+print(f"RMSE Naiv (P_t-1)             : {naive_rmse_mc:.3f} USD")
+""")
+
+code(r"""
+plt.figure(figsize=(8, 4.5))
+plt.hist(mc_rmse, bins=40, color="lightgray", edgecolor="white",
+         label=f"{N_PATHS} Random-Walk-Pfade")
+plt.axvline(lstm_rmse_mc, color="crimson", lw=2, label=f"{model_name} (RMSE={lstm_rmse_mc:.2f})")
+plt.axvline(naive_rmse_mc, color="steelblue", lw=2, ls="--",
+            label=f"Naiv (RMSE={naive_rmse_mc:.2f})")
+plt.xlabel("RMSE (USD)"); plt.ylabel("Häufigkeit")
+plt.title("RMSE-Verteilung: Monte-Carlo-Random-Walk vs. Modelle")
+plt.legend(fontsize=8); plt.tight_layout(); plt.show()
+""")
+
+md(r"""
+**Interpretation.** Liegt der LSTM-RMSE deutlich **unterhalb** der 5.-Perzentile
+der simulierten Zufallsverteilung, ist die Prognosegüte statistisch von reinem
+Rauschen zu unterscheiden. Liegt er hingegen **innerhalb** der Verteilung
+(typischer Fall bei nahezu Random-Walk-Kursen, vgl. Kap. 4.3 und 8.3), erklärt
+reiner Zufall einen vergleichbaren Fehler – ein starkes Indiz dafür, dass das
+Modell keine über den Zufall hinausgehende Struktur ausschöpft.
+""")
+
+md(r"""
+### 7.1c  Statistische Signifikanztests (LSTM vs. Naive Baseline)
+
+Ein niedrigerer RMSE allein belegt noch keinen **signifikanten** Unterschied in
+der Prognosegüte. Wir prüfen daher formal, ob sich die Fehler des LSTM
+signifikant von denen der naiven Baseline unterscheiden:
+
+* **Diebold-Mariano-Test** (parametrisch): $H_0$: gleiche erwartete Verlustdifferenz
+  ($E[d_t]=0$ mit $d_t = e_{\text{LSTM},t}^2 - e_{\text{Naiv},t}^2$). Wir verwenden
+  die Kleinstichprobenkorrektur nach Harvey, Leybourne & Newbold (1997).
+* **Wilcoxon-Vorzeichen-Rang-Test** (nichtparametrisch, robust gegenüber
+  Ausreißern/Nicht-Normalität): $H_0$: die absoluten Fehler beider Modelle stammen
+  aus derselben Verteilung (paarweiser Vergleich pro Testtag).
+""")
+
+code(r"""
+def diebold_mariano(e1, e2, h=1, power=2):
+    '''Diebold-Mariano-Test (Harvey/Leybourne/Newbold-korrigiert).
+    e1, e2: Fehlervektoren (y_true - y_pred) der beiden zu vergleichenden Modelle.
+    H0: gleiche Prognosegüte. Negative Statistik => Modell 1 (e1) ist besser.
+    Rückgabe: (DM-Statistik, p-Wert)
+    '''
+    d = np.abs(e1) ** power - np.abs(e2) ** power
+    n = len(d)
+    dbar = d.mean()
+
+    gamma0 = np.var(d, ddof=0)
+    var_d = gamma0
+    for lag in range(1, h):
+        cov = np.cov(d[lag:], d[:-lag])[0, 1]
+        var_d += 2 * (1 - lag / h) * cov
+    var_d /= n
+
+    dm_stat = dbar / np.sqrt(var_d)
+    hln = np.sqrt((n + 1 - 2 * h + h * (h - 1) / n) / n)   # Kleinstichprobenkorrektur
+    dm_stat_corr = dm_stat * hln
+    p_value = 2 * (1 - stats.t.cdf(np.abs(dm_stat_corr), df=n - 1))
+    return dm_stat_corr, p_value
+
+resid_lstm_sig  = y_test_price - lstm_pred
+resid_naive_sig = y_test_price - naive_pred
+
+dm_stat, dm_p = diebold_mariano(resid_lstm_sig, resid_naive_sig, h=1, power=2)
+print("=== Diebold-Mariano-Test (LSTM vs. Naiv, quadratischer Verlust) ===")
+print(f"  DM-Statistik : {dm_stat:.4f}")
+print(f"  p-Wert       : {dm_p:.4g}")
+if dm_p < 0.05:
+    dm_verdict = "LSTM signifikant besser" if dm_stat < 0 else "Naiv signifikant besser"
+else:
+    dm_verdict = "kein signifikanter Unterschied"
+print(f"  => {dm_verdict}  (alpha=0.05)\n")
+
+wstat, wp = stats.wilcoxon(np.abs(resid_lstm_sig), np.abs(resid_naive_sig))
+print("=== Wilcoxon-Vorzeichen-Rang-Test (|Fehler LSTM| vs. |Fehler Naiv|) ===")
+print(f"  Statistik : {wstat:.1f}")
+print(f"  p-Wert    : {wp:.4g}")
+w_verdict = "signifikanter Unterschied" if wp < 0.05 else "kein signifikanter Unterschied"
+print(f"  => {w_verdict}  (alpha=0.05)")
+""")
+
+md(r"""
+**Interpretation.** Nur wenn **beide** Tests $H_0$ zugunsten des LSTM verwerfen
+(p < 0.05, DM-Statistik < 0), ist die scheinbare Verbesserung gegenüber der
+naiven Baseline statistisch abgesichert und nicht bloß Stichprobenrauschen.
+Angesichts des in Kap. 8.3 diskutierten (nahezu) Random-Walk-Charakters der
+Kursreihe ist ein nicht-signifikantes Ergebnis hier der **erwartbare** Befund.
+""")
+
+md(r"""
 ### 7.2  Gegenüberstellung tatsächlicher und prognostizierter Kursverläufe
 """)
 
@@ -1422,6 +1557,119 @@ ax.plot(test_dates, naive_pred,  label="Naiv (P_{t-1})", color="steelblue",
         lw=1.0, ls="--", alpha=0.8)
 ax.set(title="Testzeitraum: Ist-Kurs vs. Prognosen", ylabel="Close (USD)")
 ax.legend(); plt.tight_layout(); plt.show()
+""")
+
+md(r"""
+### 7.2b  Bootstrap-Prognoseintervalle
+
+Ein Punktschätzer allein sagt nichts über die **Unsicherheit** der Prognose aus.
+Wir bootstrappen die LSTM-Residuen der Testmenge ($B = 1\,000$ Resamplings mit
+Zurücklegen) und konstruieren daraus empirische **80 %- und 95 %-Prognosebänder**
+um die Punktprognose: Für jede Bootstrap-Wiederholung wird die Punktprognose um
+einen zufällig gezogenen (historischen) Residualwert verschoben; die Perzentile
+der resultierenden Verteilung je Zeitpunkt ergeben die Bänder.
+""")
+
+code(r"""
+B_BOOT = 1000
+resid_test = y_test_price - lstm_pred
+rng_boot = np.random.default_rng(SEED)
+
+# (B_BOOT, n_test): je Bootstrap-Wiederholung ein resampelter Residualvektor
+boot_resid = rng_boot.choice(resid_test, size=(B_BOOT, len(resid_test)), replace=True)
+boot_paths = lstm_pred[None, :] + boot_resid
+
+lo80, hi80 = np.percentile(boot_paths, [10, 90],  axis=0)
+lo95, hi95 = np.percentile(boot_paths, [2.5, 97.5], axis=0)
+
+coverage80 = ((y_test_price >= lo80) & (y_test_price <= hi80)).mean()
+coverage95 = ((y_test_price >= lo95) & (y_test_price <= hi95)).mean()
+print(f"Bootstrap-Wiederholungen        : {B_BOOT}")
+print(f"Mittlere Breite 80%-Band        : {(hi80 - lo80).mean():.3f} USD")
+print(f"Mittlere Breite 95%-Band        : {(hi95 - lo95).mean():.3f} USD")
+print(f"Empirische Abdeckung 80%-Band   : {coverage80:.1%}  (Soll: 80%)")
+print(f"Empirische Abdeckung 95%-Band   : {coverage95:.1%}  (Soll: 95%)")
+""")
+
+code(r"""
+fig, ax = plt.subplots(figsize=(13, 5))
+ax.fill_between(test_dates, lo95, hi95, color="crimson", alpha=0.15, label="95%-Prognoseband")
+ax.fill_between(test_dates, lo80, hi80, color="crimson", alpha=0.30, label="80%-Prognoseband")
+ax.plot(test_dates, y_test_price, label="Ist (tatsächlich)", color="black", lw=1.4)
+ax.plot(test_dates, lstm_pred,    label=f"{model_name}", color="crimson", lw=1.2)
+ax.set(title="Bootstrap-Prognoseintervalle (80% / 95%) um die LSTM-Punktprognose",
+       ylabel="Close (USD)")
+ax.legend(); plt.tight_layout(); plt.show()
+""")
+
+md(r"""
+**Interpretation.** Liegt die empirische Abdeckung nahe am nominellen Niveau
+(80 % bzw. 95 %), sind die Bänder gut kalibriert. Da das Bootstrap-Verfahren
+i.i.d. Residuen unterstellt, ignoriert es Volatilitäts-Cluster (Kap. 4.2) —
+die Bandbreite ist über die Zeit konstant, obwohl die tatsächliche Unsicherheit
+in turbulenten Marktphasen höher sein dürfte.
+""")
+
+md(r"""
+### 7.2c  Residualdiagnose für das LSTM
+
+Ein gutes Prognosemodell sollte **weisses Rauschen** als Residuen hinterlassen:
+keine verbleibende Autokorrelation (sonst existiert noch ausschöpfbare Struktur)
+und – für die Gültigkeit der Bootstrap-Prognoseintervalle (Kap. 7.2b) – eine
+näherungsweise **symmetrische, normalverteilte** Fehlerverteilung.
+
+* **ACF/PACF der Testresiduen:** Balken ausserhalb des Konfidenzbandes deuten auf
+  verbleibende Autokorrelation hin.
+* **Ljung-Box-Test:** $H_0$: keine Autokorrelation bis Lag $k$.
+* **QQ-Plot:** Abweichungen von der Diagonalen zeigen Abweichungen von der
+  Normalverteilung (insb. „Fat Tails" wie schon bei den Renditen in Kap. 4.2).
+""")
+
+code(r"""
+resid_diag = y_test_price - lstm_pred
+
+fig, axes = plt.subplots(1, 2, figsize=(13, 4))
+plot_acf(resid_diag,  lags=30, ax=axes[0], title="ACF der LSTM-Testresiduen")
+plot_pacf(resid_diag, lags=30, ax=axes[1], title="PACF der LSTM-Testresiduen", method="ywm")
+plt.tight_layout(); plt.show()
+
+lb_resid = acorr_ljungbox(resid_diag, lags=[10, 20], return_df=True)
+print("=== Ljung-Box-Test auf LSTM-Testresiduen ===")
+print(lb_resid.round(4).to_string())
+for lag in lb_resid.index:
+    p = lb_resid.loc[lag, "lb_pvalue"]
+    verdict = "Autokorrelation vorhanden" if p < 0.05 else "kein Hinweis auf Autokorrelation"
+    print(f"  Lag {lag:>2}: p={p:.4g}  => {verdict}")
+""")
+
+code(r"""
+fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+axes[0].hist(resid_diag, bins=30, color="steelblue", alpha=0.75, density=True)
+_x = np.linspace(resid_diag.min(), resid_diag.max(), 200)
+axes[0].plot(_x, stats.norm.pdf(_x, resid_diag.mean(), resid_diag.std()), "r--",
+             label="Normalverteilung")
+axes[0].set(title="Verteilung der LSTM-Testresiduen", xlabel="Residuum (USD)")
+axes[0].legend()
+
+stats.probplot(resid_diag, dist="norm", plot=axes[1])
+axes[1].set_title("QQ-Plot der LSTM-Testresiduen")
+plt.tight_layout(); plt.show()
+
+jb_resid = stats.jarque_bera(resid_diag)
+print(f"Residuen: Schiefe={stats.skew(resid_diag):.3f}  Kurtosis={stats.kurtosis(resid_diag):.3f}")
+print(f"Jarque-Bera-Test: Statistik={jb_resid[0]:.2f}, p={jb_resid[1]:.4g} "
+      f"-> Normalverteilung {'verworfen' if jb_resid[1] < 0.05 else 'nicht verworfen'}")
+""")
+
+md(r"""
+**Interpretation.** Verbleibende signifikante Autokorrelation (Ljung-Box
+verwirft $H_0$) wäre ein Hinweis, dass das LSTM systematisch ausschöpfbare
+Struktur übersieht. Abweichungen vom QQ-Plot bzw. ein signifikanter
+Jarque-Bera-Test relativieren die Bootstrap-Prognoseintervalle aus Kap. 7.2b:
+Diese unterstellen implizit i.i.d., nicht notwendig normalverteilte Residuen –
+bei starken Abweichungen wären modellbasierte (statt empirische) Intervalle
+mit Vorsicht zu interpretieren.
 """)
 
 md(r"""
@@ -1807,6 +2055,7 @@ gespeichert. Die Dateien können direkt in LaTeX-Tabellen (z. B. via
 | `arima_aic_search.csv` | Vollständiges AIC-Gitter der ARIMA/SARIMA-Suche |
 | `trading_simulation.csv` | Sharpe Ratio, Max Drawdown, kum. Rendite aller Strategien |
 | `lstm_hpo_results.csv` | LSTM-Hyperparameter-Suche (nur wenn TensorFlow verfügbar) |
+| `stationarity_tests.csv` | ADF-/KPSS-Teststatistiken und -Urteile (Kap. 4.3) |
 """)
 
 code(r"""
@@ -1854,6 +2103,13 @@ if HAS_TF:
     print(f"Gespeichert: {_path}")
 else:
     print("LSTM-HPO-CSV: kein TensorFlow -> übersprungen.")
+
+# 6) Stationaritätstests (ADF + KPSS)
+_path = RESULTS_DIR / "stationarity_tests.csv"
+stat_df = pd.DataFrame(stationarity_results).T
+stat_df.index.name = "Zeitreihe"
+stat_df.to_csv(_path, float_format="%.4g")
+print(f"Gespeichert: {_path}")
 
 print(f"\nAlle Ergebnisse in: {RESULTS_DIR.resolve()}")
 """)
