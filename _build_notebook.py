@@ -1409,6 +1409,64 @@ plt.tight_layout(); plt.show()
 """)
 
 md(r"""
+### 7.1b  Benchmark gegen Monte-Carlo-Random-Walk-Simulation
+
+Reicht reiner Zufall aus, um ähnliche Fehlerwerte wie die trainierten Modelle
+zu erzielen? Wir simulieren $N=1\,000$ **Random-Walk-Pfade** (geometrische
+Brownsche Bewegung) über den Testzeitraum, kalibriert ausschließlich auf den
+**Trainings**-Tagesrenditen ($\mu$, $\sigma$ der Log-Renditen), und vergleichen
+die resultierende RMSE-Verteilung mit dem tatsächlichen LSTM- und Naiv-Fehler.
+Liegt der LSTM-RMSE innerhalb dieser Zufallsverteilung, liefert das Modell
+keinen messbaren Mehrwert gegenüber reinem Rauschen.
+""")
+
+code(r"""
+N_PATHS = 1000
+rng_mc = np.random.default_rng(SEED)
+
+train_log_ret = feat["LogReturn"].values[idx_train]
+mu_mc, sigma_mc = train_log_ret.mean(), train_log_ret.std()
+
+h  = len(y_test_price)                        # Prognosehorizont (Testtage)
+p0 = feat[TARGET].values[idx_test[0] - 1]     # letzter bekannter Kurs vor dem Testfenster
+
+shocks   = rng_mc.normal(mu_mc, sigma_mc, size=(N_PATHS, h))
+mc_paths = p0 * np.exp(np.cumsum(shocks, axis=1))
+mc_rmse  = np.sqrt(((mc_paths - y_test_price) ** 2).mean(axis=1))
+
+lstm_rmse_mc  = res_df.loc[model_name, "RMSE"]
+naive_rmse_mc = res_df.loc["Naiv (P_{t-1})", "RMSE"]
+pctile        = (mc_rmse < lstm_rmse_mc).mean() * 100
+
+print(f"Random-Walk-Simulation: {N_PATHS} Pfade, mu={mu_mc:.5f}, sigma={sigma_mc:.5f} (taeglich, aus Trainingsdaten)")
+print(f"RMSE Monte-Carlo (Median)     : {np.median(mc_rmse):.3f} USD")
+print(f"RMSE Monte-Carlo (5.-95. Pct.): [{np.percentile(mc_rmse, 5):.3f}, {np.percentile(mc_rmse, 95):.3f}] USD")
+print(f"RMSE {model_name:<24}: {lstm_rmse_mc:.3f} USD  (besser als {pctile:.1f}% der Zufallspfade)")
+print(f"RMSE Naiv (P_t-1)             : {naive_rmse_mc:.3f} USD")
+""")
+
+code(r"""
+plt.figure(figsize=(8, 4.5))
+plt.hist(mc_rmse, bins=40, color="lightgray", edgecolor="white",
+         label=f"{N_PATHS} Random-Walk-Pfade")
+plt.axvline(lstm_rmse_mc, color="crimson", lw=2, label=f"{model_name} (RMSE={lstm_rmse_mc:.2f})")
+plt.axvline(naive_rmse_mc, color="steelblue", lw=2, ls="--",
+            label=f"Naiv (RMSE={naive_rmse_mc:.2f})")
+plt.xlabel("RMSE (USD)"); plt.ylabel("Häufigkeit")
+plt.title("RMSE-Verteilung: Monte-Carlo-Random-Walk vs. Modelle")
+plt.legend(fontsize=8); plt.tight_layout(); plt.show()
+""")
+
+md(r"""
+**Interpretation.** Liegt der LSTM-RMSE deutlich **unterhalb** der 5.-Perzentile
+der simulierten Zufallsverteilung, ist die Prognosegüte statistisch von reinem
+Rauschen zu unterscheiden. Liegt er hingegen **innerhalb** der Verteilung
+(typischer Fall bei nahezu Random-Walk-Kursen, vgl. Kap. 4.3 und 8.3), erklärt
+reiner Zufall einen vergleichbaren Fehler – ein starkes Indiz dafür, dass das
+Modell keine über den Zufall hinausgehende Struktur ausschöpft.
+""")
+
+md(r"""
 ### 7.2  Gegenüberstellung tatsächlicher und prognostizierter Kursverläufe
 """)
 

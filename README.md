@@ -621,7 +621,7 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Testmenge nach Marktregime aufteilen (Trend, Seitwärts, Crash).
             --> Separate Metriken je Regime: Wo versagen die Modelle?
 
-[ ] [M][S]  Benchmark gegen Random-Walk-Simulation
+[x] [M][S]  Benchmark gegen Random-Walk-Simulation
             --> Monte-Carlo-Simulation (1 000 Pfade) als statistischer Untergrenze.
             --> Vergleich: Liegt LSTM-RMSE unter dem Erwartungswert des Random Walk?
 ```
