@@ -505,6 +505,7 @@ stock-price-prediction/
 ├── Dockerfile                        # Containerisierte, reproduzierbare Ausführung
 ├── .dockerignore                     # Ausschlüsse für den Docker-Build-Kontext
 ├── .github/workflows/                # CI: automatische Notebook-Ausführung (update-metrics.yml)
+├── TODO.md                           # Offene To-Dos & Projektplan
 └── README.md                         # Diese Datei
 ```
 
