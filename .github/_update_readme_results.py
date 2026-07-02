@@ -62,24 +62,29 @@ def render_metrics_table(csv_path):
     df = pd.read_csv(csv_path, index_col=0)
     rows = {label_for(idx): row for idx, row in df.iterrows()}
 
-    col_w = (20, 9, 10, 8, 9, 6)
+    col_w = (20, 9, 10, 8, 7, 9, 6)
+    theil_head = "Theil's U"
     header = (f"{'Modell':<{col_w[0]}} │ {'MAE (USD)':>{col_w[1]}} │ "
               f"{'RMSE (USD)':>{col_w[2]}} │ {'MAPE (%)':>{col_w[3]}} │ "
-              f"{'Theil´s U':>{col_w[4]}} │ {'DA (%)':>{col_w[5]}}")
+              f"{'R²':>{col_w[4]}} │ {theil_head:>{col_w[5]}} │ {'DA (%)':>{col_w[6]}}")
     sep = ("─" * (col_w[0] + 1) + "┼" + "─" * (col_w[1] + 2) + "┼" +
            "─" * (col_w[2] + 2) + "┼" + "─" * (col_w[3] + 2) + "┼" +
-           "─" * (col_w[4] + 2) + "┼" + "─" * (col_w[5] + 2))
+           "─" * (col_w[4] + 2) + "┼" + "─" * (col_w[5] + 2) + "┼" +
+           "─" * (col_w[6] + 2))
 
     lines = [header, sep]
     for label in MODEL_ROW_ORDER:
         r = rows.get(label)
         if r is None:
             lines.append(f"{label:<{col_w[0]}} │ {'–':>{col_w[1]}} │ {'–':>{col_w[2]}} │ "
-                         f"{'–':>{col_w[3]}} │ {'–':>{col_w[4]}} │ {'–':>{col_w[5]}}")
+                         f"{'–':>{col_w[3]}} │ {'–':>{col_w[4]}} │ {'–':>{col_w[5]}} │ "
+                         f"{'–':>{col_w[6]}}")
             continue
         mae, rmse, mape, theil = r["MAE"], r["RMSE"], r["MAPE"] * 100, r["Theil_U"]
+        r2 = r["R²"]
         lines.append(f"{label:<{col_w[0]}} │ {mae:{col_w[1]}.3f} │ {rmse:{col_w[2]}.3f} │ "
-                     f"{mape:{col_w[3]}.2f} │ {theil:{col_w[4]}.4f} │ {'–':>{col_w[5]}}")
+                     f"{mape:{col_w[3]}.2f} │ {r2:{col_w[4]}.4f} │ {theil:{col_w[5]}.4f} │ "
+                     f"{'–':>{col_w[6]}}")
     lines.append(sep.replace("┼", "┴"))
     lines.append("Automatisch befüllt aus results/metrics_comparison.csv "
                  f"({pd.Timestamp.now():%Y-%m-%d})")
