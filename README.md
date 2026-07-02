@@ -248,13 +248,13 @@ Prognose: Walk-Forward (1-step-ahead, Rolling Refit)
 ### 5.2  Walk-Forward-Kreuzvalidierung
 
 ```
-Zeitreihen-CV mit expandierendem Trainingsfenster (5 Folds):
+Zeitreihen-CV mit expandierendem Trainingsfenster (3 Folds, siehe CV_FOLDS in
+Kap. 6.4 des Notebooks — bewusst klein gehalten, um die interaktive
+Ausführbarkeit zu gewährleisten):
 
-Fold 1:  [████████████████][░░░░░░░░░░░░░░░░░░░░░░░░]
-Fold 2:  [████████████████████][░░░░░░░░░░░░░░░░░░░░]
-Fold 3:  [████████████████████████][░░░░░░░░░░░░░░░░]
-Fold 4:  [████████████████████████████][░░░░░░░░░░░░]
-Fold 5:  [████████████████████████████████][░░░░░░░░]
+Fold 1:  [████████████████████████][░░░░░░░░░░░░]
+Fold 2:  [████████████████████████████][░░░░░░░░░░░░]
+Fold 3:  [████████████████████████████████][░░░░░░░░░░░░]
 
          [████] Training   [░░░░] Test (je Fold)
 ```
@@ -413,9 +413,6 @@ jupyter nbconvert --to notebook --execute --inplace \
   --ExecutePreprocessor.timeout=1200 \
   NVIDIA_Kursprognose_LSTM.ipynb
 
-# (optional) Notebook aus dem Generator-Skript neu erzeugen
-python .github/_build_notebook.py
-
 # (optional) README-Ergebnistabellen (6.1 & 6.3) aus results/*.csv befüllen
 python .github/_update_readme_results.py
 ```
@@ -476,7 +473,7 @@ Die Variable `DATA_SOURCE` dokumentiert die tatsächlich verwendete Quelle
 ### Kursdaten-Snapshot aktualisieren
 
 Der Workflow [`fetch-data.yml`](.github/workflows/fetch-data.yml) lädt den
-aktuellen Kursverlauf (Ticker/Zeitraum aus `.github/_build_notebook.py`, Zelle 0.1)
+aktuellen Kursverlauf (Ticker/Zeitraum aus dem Notebook, Zelle 0.1)
 via `yfinance` auf einem GitHub-Actions-Runner (mit Internetzugang) herunter
 und öffnet einen Pull Request mit dem aktualisierten
 [`data/nvda_ohlcv.csv`](data/nvda_ohlcv.csv). Manuell auslösbar über
@@ -492,7 +489,6 @@ stock-price-prediction/
 ├── requirements.txt                  # Python-Abhängigkeiten (Kern)
 ├── .github/
 │   ├── workflows/                    # CI: Notebook-Ausführung, Daten-Snapshot, Sanity-Check bei jedem PR
-│   ├── _build_notebook.py            # Generator-Skript (reproduzierbare Zellstruktur)
 │   ├── _fetch_data.py                # Lädt CSV-Snapshot (data/nvda_ohlcv.csv)
 │   └── _update_readme_results.py     # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
 ├── TODO.md                           # Offene To-Dos & Projektplan

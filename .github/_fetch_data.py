@@ -1,5 +1,6 @@
-"""Lädt den in _build_notebook.py (Zelle 0.1) konfigurierten Ticker/Zeitraum
-via yfinance und speichert ihn als CSV-Snapshot unter data/nvda_ohlcv.csv.
+"""Lädt den im Notebook (Zelle 0.1 "Zentrale Konfiguration") konfigurierten
+Ticker/Zeitraum via yfinance und speichert ihn als CSV-Snapshot unter
+data/nvda_ohlcv.csv.
 
 Dient als Offline-Fallback für load_price_data() im Notebook, falls kein
 Live-Netzwerkzugriff auf Yahoo Finance besteht (siehe README, Abschnitt 8).
@@ -7,6 +8,7 @@ Live-Netzwerkzugriff auf Yahoo Finance besteht (siehe README, Abschnitt 8).
 Nutzung:
     python .github/_fetch_data.py
 """
+import json
 import re
 import sys
 from pathlib import Path
@@ -16,13 +18,18 @@ import yfinance as yf
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
-BUILD_SCRIPT = SCRIPT_DIR / "_build_notebook.py"
+NOTEBOOK_PATH = REPO_ROOT / "NVIDIA_Kursprognose_LSTM.ipynb"
 DATA_DIR = REPO_ROOT / "data"
 OUT_PATH = DATA_DIR / "nvda_ohlcv.csv"
 
 
 def read_config():
-    text = BUILD_SCRIPT.read_text(encoding="utf-8")
+    nb = json.loads(NOTEBOOK_PATH.read_text(encoding="utf-8"))
+    text = "\n".join(
+        "".join(cell["source"])
+        for cell in nb["cells"]
+        if cell["cell_type"] == "code"
+    )
     ticker = re.search(r'^TICKER\s*=\s*"([^"]+)"', text, re.M).group(1)
     start = re.search(r'^START_DATE\s*=\s*"([^"]+)"', text, re.M).group(1)
     end = re.search(r'^END_DATE\s*=\s*"([^"]+)"', text, re.M).group(1)

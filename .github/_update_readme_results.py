@@ -6,7 +6,6 @@ sodass `results/metrics_comparison.csv` und `results/stationarity_tests.csv`
 existieren.
 
 Nutzung:
-    python .github/_build_notebook.py
     jupyter nbconvert --to notebook --execute --inplace \
         --ExecutePreprocessor.timeout=1200 NVIDIA_Kursprognose_LSTM.ipynb
     python .github/_update_readme_results.py
