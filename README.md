@@ -270,6 +270,7 @@ Fold 5:  [███████████████████████�
 
 ### 6.1  Modellvergleich (Testmenge)
 
+<!-- AUTO-GENERATED:METRICS_TABLE:START -->
 ```
 Modell               │ MAE (USD) │ RMSE (USD) │ MAPE (%) │ Theil's U │ DA (%)
 ─────────────────────┼───────────┼────────────┼──────────┼───────────┼──────────
@@ -281,6 +282,11 @@ LSTM (Log-Renditen)  │     –     │      –     │    –     │    – 
 ─────────────────────┴───────────┴────────────┴──────────┴───────────┴──────────
 Werte werden bei Notebook-Ausführung befüllt (→ results/metrics_comparison.csv)
 ```
+<!-- AUTO-GENERATED:METRICS_TABLE:END -->
+
+*Wird automatisch aus `results/metrics_comparison.csv` befüllt — siehe
+[`_update_readme_results.py`](_update_readme_results.py) (nach Notebook-Ausführung
+ausführen).*
 
 ### 6.2  Schlüsselbefund: Lag-Phänomen
 
@@ -312,13 +318,17 @@ r_t = ln(P_t / P_{t-1})
 
 ### 6.3  Stationaritätsanalyse (ADF + KPSS)
 
+<!-- AUTO-GENERATED:STATIONARITY_TABLE:START -->
 | Zeitreihe | ADF p-Wert | KPSS-Befund | Schluss |
 |-----------|-----------|-------------|---------|
 | Close (Niveau) | > 0.05 | stationär abgelehnt | **nicht stationär** |
 | Log-Renditen | < 0.01 | stationär | **stationär** |
 | Einfache Renditen | < 0.01 | stationär | stationär |
+<!-- AUTO-GENERATED:STATIONARITY_TABLE:END -->
 
-*(Genaue Testwerte werden bei Notebook-Ausführung eingetragen)*
+*Wird automatisch aus `results/stationarity_tests.csv` befüllt — siehe
+[`_update_readme_results.py`](_update_readme_results.py) (nach Notebook-Ausführung
+ausführen).*
 
 ---
 
@@ -406,6 +416,9 @@ jupyter nbconvert --to notebook --execute --inplace \
 
 # (optional) Notebook aus dem Generator-Skript neu erzeugen
 python _build_notebook.py
+
+# (optional) README-Ergebnistabellen (6.1 & 6.3) aus results/*.csv befüllen
+python _update_readme_results.py
 ```
 
 ### Ausführung via Docker
@@ -460,6 +473,7 @@ stock-price-prediction/
 ├── NVIDIA_Kursprognose_LSTM.ipynb   # Hauptabgabe — vollständiges Notebook
 ├── requirements.txt                  # Python-Abhängigkeiten (Kern)
 ├── _build_notebook.py                # Generator-Skript (reproduzierbare Zellstruktur)
+├── _update_readme_results.py         # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
 ├── Dockerfile                        # Containerisierte, reproduzierbare Ausführung
 ├── .dockerignore                     # Ausschlüsse für den Docker-Build-Kontext
 └── README.md                         # Diese Datei
@@ -526,9 +540,11 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
 ### Phase 1 — Wissenschaftliche Robustheit  *(kurzfristig)*
 
 ```
-[ ] [H][S]  Metriktabelle mit echten Zahlenwerten befüllen
-            --> Notebook einmal vollständig ausführen, results/*.csv einlesen,
-                Tabelle in Abschnitt 6.1 automatisch befüllen (nbconvert + Jinja).
+[~] [H][S]  Metriktabelle mit echten Zahlenwerten befüllen
+            --> Automatisierung steht (_update_readme_results.py liest results/*.csv
+                und befüllt Abschnitt 6.1 zwischen AUTO-GENERATED-Markern).
+            --> Offen: einmal mit echten Yahoo-Finance-Daten ausführen und README
+                committen (in dieser Sandbox kein Netzwerkzugriff auf Yahoo Finance).
 
 [ ] [H][M]  Statistische Signifikanztests ergänzen
             --> Diebold-Mariano-Test: prüft, ob LSTM-Fehler signifikant kleiner
@@ -537,12 +553,14 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Implementierung: statsmodels.stats.diagnostic.acorr_ljungbox
                 bereits vorhanden; dm_test als eigenständige Funktion ergänzen.
 
-[ ] [H][S]  Konfidenzintervalle / Prognoseintervalle ausgeben
+[x] [H][S]  Konfidenzintervalle / Prognoseintervalle ausgeben
             --> Bootstrap-Methode auf LSTM-Residuen (1 000 Resamplings).
             --> Ziel: Visualisierung von 80 %- und 95 %-Bändern im Ist/Soll-Plot.
 
-[ ] [M][S]  KPSS-Testwerte in Stationaritätstabelle (Abschnitt 6.3) eintragen
+[~] [M][S]  KPSS-Testwerte in Stationaritätstabelle (Abschnitt 6.3) eintragen
             --> Automatisch aus Notebook-Output extrahieren.
+            --> Export (stationarity_tests.csv) und Befüll-Skript stehen; Tabelle
+                selbst wird erst mit echten Daten final committet (s.o.).
 
 [ ] [M][M]  Residualdiagnose für LSTM ergänzen
             --> ACF/PACF der Testresiduen, Ljung-Box-Test auf Autokorrelation.

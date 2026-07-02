@@ -156,7 +156,8 @@ warnings.filterwarnings("ignore")
 %matplotlib inline
 
 # --- Statistik / Zeitreihen -------------------------------------------------
-from statsmodels.tsa.stattools import adfuller, kpss, acf, pacf, acorr_ljungbox
+from statsmodels.tsa.stattools import adfuller, kpss, acf, pacf
+from statsmodels.stats.diagnostic import acorr_ljungbox
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from scipy import stats
 
@@ -448,6 +449,8 @@ wenn **beide Tests übereinstimmen**: ADF verwirft H₀ *und* KPSS verwirft H₀
 """)
 
 code(r"""
+stationarity_results = {}   # name -> dict(adf_stat, adf_p, kpss_stat, kpss_p, verdict)
+
 def adf_report(series, name):
     s = series.dropna()
     res = adfuller(s, autolag="AIC")
@@ -457,7 +460,7 @@ def adf_report(series, name):
     print(f"  krit. Werte   : " + ", ".join(f"{k}={v:.2f}" for k, v in res[4].items()))
     verdict = "STATIONÄR (H0 verworfen)" if res[1] < 0.05 else "NICHT stationär (H0 nicht verworfen)"
     print(f"  => {verdict}\n")
-    return res[1]
+    return res[0], res[1]
 
 def kpss_report(series, name, regression="c"):
     s = series.dropna()
@@ -470,7 +473,7 @@ def kpss_report(series, name, regression="c"):
     print(f"  krit. Werte   : " + ", ".join(f"{k}={v:.3f}" for k, v in crit.items()))
     verdict = "NICHT stationär (H0 verworfen)" if p < 0.05 else "STATIONÄR (H0 nicht verworfen)"
     print(f"  => {verdict}\n")
-    return p
+    return stat, p
 
 def combined_verdict(adf_p, kpss_p, name):
     adf_stat  = adf_p  < 0.05   # True = verworfen = stationär-Signal
@@ -484,14 +487,20 @@ def combined_verdict(adf_p, kpss_p, name):
     else:
         v = "UNSCHLÜSSIG  (ADF: nicht stationär, KPSS: stationär — mehr Daten nötig)"
     print(f"==> Kombiniertes Urteil [{name}]: {v}\n")
+    return v
 
-p_adf_lv  = adf_report(df["Close"],  "Schlusskurs (Level)")
-p_kpss_lv = kpss_report(df["Close"], "Schlusskurs (Level)")
-combined_verdict(p_adf_lv, p_kpss_lv, "Schlusskurs")
+def run_stationarity_tests(series, name):
+    adf_stat, adf_p   = adf_report(series, name)
+    kpss_stat, kpss_p = kpss_report(series, name)
+    verdict = combined_verdict(adf_p, kpss_p, name)
+    stationarity_results[name] = {
+        "ADF_stat": adf_stat, "ADF_p": adf_p,
+        "KPSS_stat": kpss_stat, "KPSS_p": kpss_p, "Verdict": verdict,
+    }
 
-p_adf_rt  = adf_report(df["Return"],  "Tagesrendite")
-p_kpss_rt = kpss_report(df["Return"], "Tagesrendite")
-combined_verdict(p_adf_rt, p_kpss_rt, "Tagesrendite")
+run_stationarity_tests(df["Close"],      "Close (Niveau)")
+run_stationarity_tests(df["Return"],     "Einfache Renditen")
+run_stationarity_tests(df["LogReturn"],  "Log-Renditen")
 """)
 
 md(r"""
@@ -1483,6 +1492,57 @@ ax.legend(); plt.tight_layout(); plt.show()
 """)
 
 md(r"""
+### 7.2b  Bootstrap-Prognoseintervalle
+
+Ein Punktschätzer allein sagt nichts über die **Unsicherheit** der Prognose aus.
+Wir bootstrappen die LSTM-Residuen der Testmenge ($B = 1\,000$ Resamplings mit
+Zurücklegen) und konstruieren daraus empirische **80 %- und 95 %-Prognosebänder**
+um die Punktprognose: Für jede Bootstrap-Wiederholung wird die Punktprognose um
+einen zufällig gezogenen (historischen) Residualwert verschoben; die Perzentile
+der resultierenden Verteilung je Zeitpunkt ergeben die Bänder.
+""")
+
+code(r"""
+B_BOOT = 1000
+resid_test = y_test_price - lstm_pred
+rng_boot = np.random.default_rng(SEED)
+
+# (B_BOOT, n_test): je Bootstrap-Wiederholung ein resampelter Residualvektor
+boot_resid = rng_boot.choice(resid_test, size=(B_BOOT, len(resid_test)), replace=True)
+boot_paths = lstm_pred[None, :] + boot_resid
+
+lo80, hi80 = np.percentile(boot_paths, [10, 90],  axis=0)
+lo95, hi95 = np.percentile(boot_paths, [2.5, 97.5], axis=0)
+
+coverage80 = ((y_test_price >= lo80) & (y_test_price <= hi80)).mean()
+coverage95 = ((y_test_price >= lo95) & (y_test_price <= hi95)).mean()
+print(f"Bootstrap-Wiederholungen        : {B_BOOT}")
+print(f"Mittlere Breite 80%-Band        : {(hi80 - lo80).mean():.3f} USD")
+print(f"Mittlere Breite 95%-Band        : {(hi95 - lo95).mean():.3f} USD")
+print(f"Empirische Abdeckung 80%-Band   : {coverage80:.1%}  (Soll: 80%)")
+print(f"Empirische Abdeckung 95%-Band   : {coverage95:.1%}  (Soll: 95%)")
+""")
+
+code(r"""
+fig, ax = plt.subplots(figsize=(13, 5))
+ax.fill_between(test_dates, lo95, hi95, color="crimson", alpha=0.15, label="95%-Prognoseband")
+ax.fill_between(test_dates, lo80, hi80, color="crimson", alpha=0.30, label="80%-Prognoseband")
+ax.plot(test_dates, y_test_price, label="Ist (tatsächlich)", color="black", lw=1.4)
+ax.plot(test_dates, lstm_pred,    label=f"{model_name}", color="crimson", lw=1.2)
+ax.set(title="Bootstrap-Prognoseintervalle (80% / 95%) um die LSTM-Punktprognose",
+       ylabel="Close (USD)")
+ax.legend(); plt.tight_layout(); plt.show()
+""")
+
+md(r"""
+**Interpretation.** Liegt die empirische Abdeckung nahe am nominellen Niveau
+(80 % bzw. 95 %), sind die Bänder gut kalibriert. Da das Bootstrap-Verfahren
+i.i.d. Residuen unterstellt, ignoriert es Volatilitäts-Cluster (Kap. 4.2) —
+die Bandbreite ist über die Zeit konstant, obwohl die tatsächliche Unsicherheit
+in turbulenten Marktphasen höher sein dürfte.
+""")
+
+md(r"""
 #### Overfitting-Prüfung: Trainings- vs. Testfehler
 
 Ein deutlich kleinerer Fehler auf den Trainings- als auf den Testdaten weist auf
@@ -1865,6 +1925,7 @@ gespeichert. Die Dateien können direkt in LaTeX-Tabellen (z. B. via
 | `arima_aic_search.csv` | Vollständiges AIC-Gitter der ARIMA/SARIMA-Suche |
 | `trading_simulation.csv` | Sharpe Ratio, Max Drawdown, kum. Rendite aller Strategien |
 | `lstm_hpo_results.csv` | LSTM-Hyperparameter-Suche (nur wenn TensorFlow verfügbar) |
+| `stationarity_tests.csv` | ADF-/KPSS-Teststatistiken und -Urteile (Kap. 4.3) |
 """)
 
 code(r"""
@@ -1912,6 +1973,13 @@ if HAS_TF:
     print(f"Gespeichert: {_path}")
 else:
     print("LSTM-HPO-CSV: kein TensorFlow -> übersprungen.")
+
+# 6) Stationaritätstests (ADF + KPSS)
+_path = RESULTS_DIR / "stationarity_tests.csv"
+stat_df = pd.DataFrame(stationarity_results).T
+stat_df.index.name = "Zeitreihe"
+stat_df.to_csv(_path, float_format="%.4g")
+print(f"Gespeichert: {_path}")
 
 print(f"\nAlle Ergebnisse in: {RESULTS_DIR.resolve()}")
 """)
