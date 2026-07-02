@@ -284,7 +284,7 @@ Werte werden bei Notebook-Ausführung befüllt (→ results/metrics_comparison.c
 <!-- AUTO-GENERATED:METRICS_TABLE:END -->
 
 *Wird automatisch aus `results/metrics_comparison.csv` befüllt — siehe
-[`_update_readme_results.py`](_update_readme_results.py) (nach Notebook-Ausführung
+[`_update_readme_results.py`](.github/_update_readme_results.py) (nach Notebook-Ausführung
 ausführen).*
 
 ### 6.2  Schlüsselbefund: Lag-Phänomen
@@ -326,7 +326,7 @@ r_t = ln(P_t / P_{t-1})
 <!-- AUTO-GENERATED:STATIONARITY_TABLE:END -->
 
 *Wird automatisch aus `results/stationarity_tests.csv` befüllt — siehe
-[`_update_readme_results.py`](_update_readme_results.py) (nach Notebook-Ausführung
+[`_update_readme_results.py`](.github/_update_readme_results.py) (nach Notebook-Ausführung
 ausführen).*
 
 ---
@@ -414,10 +414,10 @@ jupyter nbconvert --to notebook --execute --inplace \
   NVIDIA_Kursprognose_LSTM.ipynb
 
 # (optional) Notebook aus dem Generator-Skript neu erzeugen
-python _build_notebook.py
+python .github/_build_notebook.py
 
 # (optional) README-Ergebnistabellen (6.1 & 6.3) aus results/*.csv befüllen
-python _update_readme_results.py
+python .github/_update_readme_results.py
 ```
 
 ### Ausführung via Docker
@@ -486,7 +486,7 @@ Die Variable `DATA_SOURCE` dokumentiert die tatsächlich verwendete Quelle
 ### Kursdaten-Snapshot aktualisieren
 
 Der Workflow [`fetch-data.yml`](.github/workflows/fetch-data.yml) lädt den
-aktuellen Kursverlauf (Ticker/Zeitraum aus `_build_notebook.py`, Zelle 0.1)
+aktuellen Kursverlauf (Ticker/Zeitraum aus `.github/_build_notebook.py`, Zelle 0.1)
 via `yfinance` auf einem GitHub-Actions-Runner (mit Internetzugang) herunter
 und öffnet einen Pull Request mit dem aktualisierten
 [`data/nvda_ohlcv.csv`](data/nvda_ohlcv.csv). Manuell auslösbar über
@@ -500,11 +500,13 @@ und öffnet einen Pull Request mit dem aktualisierten
 stock-price-prediction/
 ├── NVIDIA_Kursprognose_LSTM.ipynb   # Hauptabgabe — vollständiges Notebook
 ├── requirements.txt                  # Python-Abhängigkeiten (Kern)
-├── _build_notebook.py                # Generator-Skript (reproduzierbare Zellstruktur)
-├── _update_readme_results.py         # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
 ├── Dockerfile                        # Containerisierte, reproduzierbare Ausführung
 ├── .dockerignore                     # Ausschlüsse für den Docker-Build-Kontext
-├── .github/workflows/                # CI: automatische Notebook-Ausführung (update-metrics.yml)
+├── .github/
+│   ├── workflows/                    # CI: automatische Notebook-Ausführung (update-metrics.yml)
+│   ├── _build_notebook.py            # Generator-Skript (reproduzierbare Zellstruktur)
+│   ├── _fetch_data.py                # Lädt CSV-Snapshot (data/nvda_ohlcv.csv)
+│   └── _update_readme_results.py     # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
 ├── TODO.md                           # Offene To-Dos & Projektplan
 └── README.md                         # Diese Datei
 ```

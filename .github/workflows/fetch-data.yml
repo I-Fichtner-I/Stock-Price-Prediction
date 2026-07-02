@@ -27,7 +27,7 @@ jobs:
         run: pip install pandas yfinance
 
       - name: Fetch price data snapshot
-        run: python _fetch_data.py
+        run: python .github/_fetch_data.py
 
       - name: Open PR with updated data snapshot
         uses: peter-evans/create-pull-request@v6
@@ -36,7 +36,7 @@ jobs:
           title: "Aktualisierter Kursdaten-Snapshot (data/nvda_ohlcv.csv)"
           body: |
             Automatisch erzeugt vom Workflow `fetch-data.yml`: lädt den in
-            `_build_notebook.py` (Zelle 0.1) konfigurierten Ticker/Zeitraum
+            `.github/_build_notebook.py` (Zelle 0.1) konfigurierten Ticker/Zeitraum
             via `yfinance` neu und aktualisiert `data/nvda_ohlcv.csv`.
 
             Dient als Offline-Fallback für `load_price_data()` im Notebook

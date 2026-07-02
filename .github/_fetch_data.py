@@ -5,7 +5,7 @@ Dient als Offline-Fallback für load_price_data() im Notebook, falls kein
 Live-Netzwerkzugriff auf Yahoo Finance besteht (siehe README, Abschnitt 8).
 
 Nutzung:
-    python _fetch_data.py
+    python .github/_fetch_data.py
 """
 import re
 import sys
@@ -14,9 +14,10 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
-ROOT = Path(__file__).resolve().parent
-BUILD_SCRIPT = ROOT / "_build_notebook.py"
-DATA_DIR = ROOT / "data"
+SCRIPT_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPT_DIR.parent
+BUILD_SCRIPT = SCRIPT_DIR / "_build_notebook.py"
+DATA_DIR = REPO_ROOT / "data"
 OUT_PATH = DATA_DIR / "nvda_ohlcv.csv"
 
 

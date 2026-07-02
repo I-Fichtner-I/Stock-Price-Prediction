@@ -22,7 +22,7 @@ Status:     [ ] Offen · [~] In Arbeit
 
 ```
 [~] [H][S]  Metriktabelle mit echten Zahlenwerten befüllen
-            --> Automatisierung steht (_update_readme_results.py liest results/*.csv
+            --> Automatisierung steht (.github/_update_readme_results.py liest results/*.csv
                 und befüllt Abschnitt 6.1 zwischen AUTO-GENERATED-Markern).
             --> Offen: einmal mit echten Yahoo-Finance-Daten ausführen und README
                 committen (in dieser Sandbox kein Netzwerkzugriff auf Yahoo Finance).

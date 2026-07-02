@@ -3,7 +3,7 @@
 
 Erzeugt das Notebook aus den hier definierten Markdown-/Code-Zellen.
 Das Notebook selbst ist die Abgabe; dieses Skript dient nur der reproduzierbaren
-Erstellung (siehe notebooks/README.md). Aufruf:  python _build_notebook.py
+Erstellung (siehe README.md). Aufruf:  python .github/_build_notebook.py
 """
 import nbformat as nbf
 from nbformat.v4 import new_notebook, new_markdown_cell, new_code_cell
@@ -2201,6 +2201,7 @@ nb.metadata["kernelspec"] = {"display_name": "Python 3", "language": "python", "
 nb.metadata["language_info"] = {"name": "python", "version": "3.11"}
 
 import os
-out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "NVIDIA_Kursprognose_LSTM.ipynb")
+_repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+out = os.path.join(_repo_root, "NVIDIA_Kursprognose_LSTM.ipynb")
 nbf.write(nb, out)
 print("Notebook geschrieben:", out, "| Zellen:", len(cells))
