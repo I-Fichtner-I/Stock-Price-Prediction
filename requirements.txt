@@ -24,3 +24,8 @@ tensorflow-cpu>=2.16.0     # bzw. tensorflow>=2.16.0 (mit GPU)
 # ── Optional: Explainability ─────────────────────────────────────────────────
 # Ohne SHAP nutzt das Notebook eine Permutationswichtigkeit als Fallback.
 shap>=0.45.0
+
+# ── Optional: Interaktive Visualisierungen ────────────────────────────────────
+# Ohne Plotly wird die interaktive Zelle übersprungen (statische Matplotlib-Charts
+# aus Kap. 7 bleiben davon unberührt).
+plotly>=5.20.0

@@ -195,6 +195,15 @@ try:
 except ImportError:
     def tqdm(it, **kw): return it   # transparenter no-op
 
+# --- Optional: Plotly (interaktive Visualisierungen) ------------------------
+HAS_PLOTLY = False
+try:
+    import plotly.graph_objects as go
+    from plotly.subplots import make_subplots
+    HAS_PLOTLY = True
+except Exception as e:
+    print("Plotly nicht verfügbar -> interaktive Zelle (Kap. 7.2d) wird übersprungen:", e)
+
 # --- Darstellung ------------------------------------------------------------
 sns.set_theme(style="whitegrid", palette="deep")
 plt.rcParams["figure.figsize"] = (12, 5)
@@ -205,6 +214,7 @@ print(f"Python      : {sys.version.split()[0]}")
 print(f"NumPy/Pandas: {np.__version__} / {pd.__version__}")
 print(f"TensorFlow  : {'verfügbar' if HAS_TF else 'NICHT verfügbar (Fallback aktiv)'}")
 print(f"SHAP        : {'verfügbar' if HAS_SHAP else 'NICHT verfügbar (Fallback aktiv)'}")
+print(f"Plotly      : {'verfügbar' if HAS_PLOTLY else 'NICHT verfügbar (interaktive Zelle übersprungen)'}")
 """)
 
 # ============================================================================
@@ -1700,6 +1710,58 @@ md(r"""
 """)
 
 md(r"""
+### 7.2d  Interaktive Visualisierung (Plotly)
+
+Die statischen Matplotlib-Abbildungen in Kap. 7.1–7.2c decken bereits alle
+zentralen Befunde ab. Ergänzend erlaubt eine **interaktive Plotly-Grafik**
+freies Zoomen in Kursverlauf und Prognosen sowie das Ein-/Ausblenden einzelner
+Modelle per Klick auf die Legende — nützlich für die explorative Detailprüfung
+einzelner Marktphasen (z. B. der in Kap. 6.2 diskutierten Lag-Phänomene). Die
+Grafik wird zusätzlich als eigenständige HTML-Datei exportiert (kein
+Notebook/Server zur Anzeige nötig).
+""")
+
+code(r"""
+if HAS_PLOTLY:
+    fig_ia = make_subplots(rows=2, cols=1, shared_xaxes=True,
+                            row_heights=[0.7, 0.3], vertical_spacing=0.06,
+                            subplot_titles=("Ist-Kurs vs. Prognosen (zoombar)",
+                                             "Prognosefehler LSTM (USD)"))
+
+    fig_ia.add_trace(go.Scatter(x=test_dates, y=y_test_price, name="Ist (tatsächlich)",
+                                 line=dict(color="black", width=2)), row=1, col=1)
+    fig_ia.add_trace(go.Scatter(x=test_dates, y=lstm_pred, name=model_name,
+                                 line=dict(color="crimson", width=1.5)), row=1, col=1)
+    fig_ia.add_trace(go.Scatter(x=test_dates, y=arima_pred, name="ARIMA/SARIMA*",
+                                 line=dict(color="green", width=1.2)), row=1, col=1)
+    fig_ia.add_trace(go.Scatter(x=test_dates, y=naive_pred, name="Naiv (P_t-1)",
+                                 line=dict(color="steelblue", width=1.2, dash="dash")),
+                      row=1, col=1)
+    fig_ia.add_trace(go.Bar(x=test_dates, y=resid_diag, name="Fehler (Ist - LSTM)",
+                             marker_color="crimson", opacity=0.6, showlegend=False),
+                      row=2, col=1)
+
+    fig_ia.update_layout(height=650, hovermode="x unified",
+                          title="Interaktiver Modellvergleich — Testzeitraum",
+                          xaxis2=dict(rangeslider=dict(visible=True)))
+    fig_ia.update_yaxes(title_text="Close (USD)", row=1, col=1)
+    fig_ia.update_yaxes(title_text="Residuum (USD)", row=2, col=1)
+    fig_ia.show()
+
+    import pathlib as _pl
+    _cwd_ia = _pl.Path.cwd()
+    _out = (_cwd_ia / "notebooks" / "results") if (_cwd_ia / "notebooks").is_dir() \
+           else (_cwd_ia / "results")
+    _out.mkdir(parents=True, exist_ok=True)
+    _html_path = _out / "interactive_forecast.html"
+    fig_ia.write_html(_html_path, include_plotlyjs="cdn")
+    print(f"Interaktive Grafik gespeichert: {_html_path}")
+else:
+    print("Plotly nicht installiert -> interaktive Visualisierung übersprungen "
+          "(statische Charts aus Kap. 7.1-7.2c bleiben unberührt).")
+""")
+
+md(r"""
 ### 7.3  Erklärbarkeit der Modellentscheidungen (SHAP)
 
 Mit **SHAP (SHapley Additive exPlanations)** untersuchen wir den Einfluss der
@@ -2056,6 +2118,7 @@ gespeichert. Die Dateien können direkt in LaTeX-Tabellen (z. B. via
 | `trading_simulation.csv` | Sharpe Ratio, Max Drawdown, kum. Rendite aller Strategien |
 | `lstm_hpo_results.csv` | LSTM-Hyperparameter-Suche (nur wenn TensorFlow verfügbar) |
 | `stationarity_tests.csv` | ADF-/KPSS-Teststatistiken und -Urteile (Kap. 4.3) |
+| `interactive_forecast.html` | Interaktive Plotly-Grafik (Kap. 7.2d, nur wenn Plotly verfügbar) |
 """)
 
 code(r"""
