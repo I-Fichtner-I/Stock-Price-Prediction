@@ -20,8 +20,8 @@ jobs:
       - name: Install lint-only dependencies
         run: pip install pyyaml nbformat
 
-      - name: Check Python syntax (.github/*.py)
-        run: python -m py_compile .github/*.py
+      - name: Check Python syntax (.github/*.py, app/)
+        run: python -m py_compile .github/*.py app/*.py app/pages/*.py
 
       - name: Validate notebook JSON
         run: python -c "import nbformat; nbformat.read('NVIDIA_Kursprognose_LSTM.ipynb', as_version=4)"

@@ -479,6 +479,20 @@ und öffnet einen Pull Request mit dem aktualisierten
 [`data/nvda_ohlcv.csv`](data/nvda_ohlcv.csv). Manuell auslösbar über
 **Actions → Fetch NVDA price data → Run workflow**.
 
+### Interaktive Web-App (Streamlit)
+
+Ergänzend zum Notebook steht unter [`app/`](app/) eine **Streamlit-App** mit
+zwei Ansichten bereit: ein **Dashboard**, das die `results/*.csv`-Ausgaben
+eines Notebook-Laufs visualisiert, sowie eine **Live-Prognose**, die aktuelle
+Kursdaten lädt und in Echtzeit eine Naive-/ARIMA-Prognose erstellt (das LSTM
+wird dort bewusst nicht verwendet — siehe [`app/README.md`](app/README.md)
+für die Begründung und Startanleitung).
+
+```bash
+pip install -r requirements.txt -r app/requirements.txt
+streamlit run app/Home.py
+```
+
 ---
 
 ## 9  Projektstruktur
@@ -491,6 +505,11 @@ stock-price-prediction/
 │   ├── workflows/                    # CI: Notebook-Ausführung, Daten-Snapshot, Sanity-Check bei jedem PR
 │   ├── _fetch_data.py                # Lädt CSV-Snapshot (data/nvda_ohlcv.csv)
 │   └── _update_readme_results.py     # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
+├── app/                               # Streamlit-Web-App (Dashboard + Live-Prognose)
+│   ├── Home.py                       # Einstiegsseite
+│   ├── common.py                     # Gemeinsame Data-Loading-/Feature-Logik
+│   ├── pages/                        # Dashboard- und Live-Prognose-Seiten
+│   └── requirements.txt              # Zusätzliche Abhängigkeiten (streamlit, plotly)
 ├── TODO.md                           # Offene To-Dos & Projektplan
 └── README.md                         # Diese Datei
 ```

@@ -1,0 +1,4 @@
+# Zusätzliche Abhängigkeiten für die Streamlit-App (app/).
+# Kernpakete (pandas, numpy, statsmodels, yfinance) siehe ../requirements.txt.
+streamlit>=1.36.0
+plotly>=5.20.0
