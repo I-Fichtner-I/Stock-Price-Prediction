@@ -111,10 +111,10 @@ Währung   : USD
 │       ├──────────────────────────────┐                          │
 │       ▼                              ▼                          │
 │  Statistische Modelle            LSTM-Modell                    │
-│   ├── Naive Baseline              ├── Architektur-Suche         │
-│   ├── Moving-Average-Baseline     │   (Schichten, Neuronen,     │
-│   └── ARIMA/SARIMA (AIC-Suche)   │    Dropout, Lernrate)        │
-│                                   └── Walk-Forward-CV           │
+│       ├── Naive Baseline             ├── Architektur-Suche      │
+│       ├── Moving-Average-Baseline    │   (Schichten, Neuronen,  │
+│       └── ARIMA/SARIMA (AIC-Suche)   │    Dropout, Lernrate)    │
+│                                      └── Walk-Forward-CV        │
 │       │                              │                          │
 │       └──────────────┬───────────────┘                          │
 │                      ▼                                          │
