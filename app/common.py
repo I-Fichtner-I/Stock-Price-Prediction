@@ -70,7 +70,9 @@ def load_live_price_data(ticker: str = TICKER, start: str = "2015-01-01",
     except Exception:
         df = None
 
-    if df is None or len(df) == 0:
+    if (df is None or len(df) == 0) and ticker.upper() == TICKER:
+        # CSV-Snapshot ist nur fuer NVDA vorhanden - bei anderen Tickern wuerde
+        # er sonst stillschweigend als deren Daten ausgegeben werden.
         snapshot_path = DATA_DIR / "nvda_ohlcv.csv"
         if snapshot_path.is_file():
             df = pd.read_csv(snapshot_path, index_col="Date", parse_dates=True)
