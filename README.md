@@ -408,6 +408,22 @@ jupyter nbconvert --to notebook --execute --inplace \
 python _build_notebook.py
 ```
 
+### Ausführung via Docker
+
+Für eine vollständig reproduzierbare Umgebung (unabhängig vom lokalen
+Python-Setup) steht ein `Dockerfile` bereit:
+
+```bash
+# Image bauen
+docker build -t stock-price-prediction .
+
+# Jupyter Notebook im Container starten (Port 8888)
+docker run --rm -p 8888:8888 stock-price-prediction
+```
+
+Der ausgegebene Link (inkl. Token) öffnet Jupyter im Browser; das Notebook
+läuft darin mit exakt den in `requirements.txt` gepinnten Abhängigkeiten.
+
 ### Reproduzierbarkeitsgarantien
 
 | Massnahme | Detail |
@@ -444,6 +460,8 @@ stock-price-prediction/
 ├── NVIDIA_Kursprognose_LSTM.ipynb   # Hauptabgabe — vollständiges Notebook
 ├── requirements.txt                  # Python-Abhängigkeiten (Kern)
 ├── _build_notebook.py                # Generator-Skript (reproduzierbare Zellstruktur)
+├── Dockerfile                        # Containerisierte, reproduzierbare Ausführung
+├── .dockerignore                     # Ausschlüsse für den Docker-Build-Kontext
 └── README.md                         # Diese Datei
 ```
 
@@ -634,7 +652,7 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Automatisches Logging von Hyperparametern, Metriken, Artefakten.
             --> Vergleich vieler Runs ohne manuelle Tabellenpflege.
 
-[ ] [N][M]  Docker-Container für vollständige Reproduzierbarkeit
+[x] [N][M]  Docker-Container für vollständige Reproduzierbarkeit
             --> Dockerfile mit pinned Versionen (requirements.txt + system libs).
             --> Notebook läuft identisch auf jeder Maschine.
 ```
