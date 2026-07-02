@@ -453,12 +453,22 @@ Tab **Actions → Update metrics (notebook run) → Run workflow**.
 | Chronologischer Split | Kein zeitliches Datenleck möglich |
 | Scaler-Kalibrierung | Ausschliesslich auf Trainingsdaten |
 | Konfiguration | Alle Parameter zentral in Zelle 0.1 |
-| Offlinefähigkeit | Synthetischer GBM-Fallback bei fehlendem Netzwerk |
+| Offlinefähigkeit | CSV-Snapshot- und synthetischer GBM-Fallback bei fehlendem Netzwerk |
 
-### Offline-Betrieb / Synthetische Daten
+### Offline-Betrieb / Datenquellen-Fallback
 
-Ist kein Netzwerkzugriff verfügbar, erzeugt das Notebook automatisch einen
-**synthetischen, NVIDIA-ähnlichen Datensatz** (Geometrische Brownsche Bewegung):
+`load_price_data()` versucht die Datenbeschaffung in drei Stufen, jeweils nur
+falls die vorherige Stufe fehlschlägt:
+
+1. **Live-Download via `yfinance`** (Yahoo Finance) — Standardfall mit
+   Netzwerkzugriff.
+2. **CSV-Snapshot** aus [`data/nvda_ohlcv.csv`](data/nvda_ohlcv.csv), falls
+   vorhanden — ein einmalig über den Workflow
+   [`fetch-data.yml`](.github/workflows/fetch-data.yml) heruntergeladener,
+   echter historischer Datensatz (siehe unten). Ermöglicht reproduzierbare
+   Ausführung mit **echten** Kursdaten auch ganz ohne Netzwerkzugriff.
+3. **Synthetischer, NVIDIA-ähnlicher Ersatzdatensatz** (Geometrische
+   Brownsche Bewegung), falls auch kein Snapshot vorliegt:
 
 ```
 dS_t = mu * S_t * dt + sigma * S_t * dW_t
@@ -467,10 +477,21 @@ mit: mu    = 0.0008  (tägliche Drift)
      sigma = 0.025   (tägliche Volatilität)
 ```
 
-Die Variable `DATA_SOURCE` dokumentiert die tatsächlich verwendete Quelle.
+Die Variable `DATA_SOURCE` dokumentiert die tatsächlich verwendete Quelle
+(`"yfinance"` · `"csv_snapshot"` · `"synthetic"`).
 
-> **Für belastbare wissenschaftliche Aussagen** sind stets die echten
-> Yahoo-Finance-Daten zu verwenden (`DATA_SOURCE == "yfinance"`).
+> **Für belastbare wissenschaftliche Aussagen** sind stets echte Kursdaten zu
+> verwenden (`DATA_SOURCE in {"yfinance", "csv_snapshot"}`), nicht der rein
+> illustrative synthetische Fallback.
+
+### Kursdaten-Snapshot aktualisieren
+
+Der Workflow [`fetch-data.yml`](.github/workflows/fetch-data.yml) lädt den
+aktuellen Kursverlauf (Ticker/Zeitraum aus `_build_notebook.py`, Zelle 0.1)
+via `yfinance` auf einem GitHub-Actions-Runner (mit Internetzugang) herunter
+und öffnet einen Pull Request mit dem aktualisierten
+[`data/nvda_ohlcv.csv`](data/nvda_ohlcv.csv). Manuell auslösbar über
+**Actions → Fetch NVDA price data → Run workflow**.
 
 ---
 
