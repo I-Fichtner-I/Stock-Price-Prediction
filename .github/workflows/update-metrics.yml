@@ -1,0 +1,61 @@
+name: Update metrics (notebook run)
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-metrics
+  cancel-in-progress: false
+
+jobs:
+  run-notebook:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install "tensorflow-cpu>=2.16.0" "shap>=0.45.0"
+
+      - name: Regenerate notebook from generator script
+        run: python _build_notebook.py
+
+      - name: Execute notebook headlessly
+        run: |
+          jupyter nbconvert --to notebook --execute --inplace \
+            --ExecutePreprocessor.timeout=3600 \
+            NVIDIA_Kursprognose_LSTM.ipynb
+
+      - name: Fill README result tables from results/*.csv
+        run: python _update_readme_results.py
+
+      - name: Open PR with updated notebook and README
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Update notebook outputs and README result tables"
+          title: "Automatisch aktualisierte Ergebnisse (Notebook-Ausführung)"
+          body: |
+            Automatisch erzeugt vom Workflow `update-metrics.yml`:
+
+            - Notebook (`NVIDIA_Kursprognose_LSTM.ipynb`) einmal vollständig ausgeführt.
+            - README-Tabellen in Abschnitt 6.1 (Modellvergleich) und 6.3
+              (Stationaritätsanalyse) aus `results/metrics_comparison.csv` bzw.
+              `results/stationarity_tests.csv` befüllt (siehe `_update_readme_results.py`).
+
+            Bitte vor dem Merge prüfen, ob `DATA_SOURCE == "yfinance"` (echte Kursdaten)
+            und nicht der synthetische Fallback verwendet wurde (siehe README, Abschnitt 8).
+          branch: automated/update-metrics
+          delete-branch: true
+          add-paths: |
+            NVIDIA_Kursprognose_LSTM.ipynb
+            README.md

@@ -437,6 +437,14 @@ docker run --rm -p 8888:8888 stock-price-prediction
 Der ausgegebene Link (inkl. Token) öffnet Jupyter im Browser; das Notebook
 läuft darin mit exakt den in `requirements.txt` gepinnten Abhängigkeiten.
 
+### Automatische Aktualisierung via GitHub Actions
+
+Der Workflow [`update-metrics.yml`](.github/workflows/update-metrics.yml) führt
+das Notebook auf einem GitHub-Actions-Runner (mit Internetzugang zu Yahoo
+Finance) vollständig aus, befüllt die README-Ergebnistabellen und öffnet
+automatisch einen Pull Request zur Prüfung. Manuell auslösbar über den
+Tab **Actions → Update metrics (notebook run) → Run workflow**.
+
 ### Reproduzierbarkeitsgarantien
 
 | Massnahme | Detail |
@@ -476,6 +484,7 @@ stock-price-prediction/
 ├── _update_readme_results.py         # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
 ├── Dockerfile                        # Containerisierte, reproduzierbare Ausführung
 ├── .dockerignore                     # Ausschlüsse für den Docker-Build-Kontext
+├── .github/workflows/                # CI: automatische Notebook-Ausführung (update-metrics.yml)
 └── README.md                         # Diese Datei
 ```
 
@@ -654,9 +663,11 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
                 src/models/lstm.py, src/evaluation/metrics.py
             --> Notebook wird zum reinen Präsentations-Layer (ruft Module auf).
 
-[ ] [H][S]  Automatische Metriken-Befüllung im README via CI
-            --> GitHub Action: führt Notebook headless aus, extrahiert
-                results/metrics_comparison.csv, aktualisiert README-Tabelle.
+[x] [H][S]  Automatische Metriken-Befüllung im README via CI
+            --> GitHub Action (.github/workflows/update-metrics.yml, manuell auslösbar
+                über "Run workflow"): führt Notebook headless aus, extrahiert
+                results/*.csv, aktualisiert README-Tabellen via
+                _update_readme_results.py und öffnet einen Pull Request zur Prüfung.
 
 [ ] [M][M]  Unit-Tests für Kernfunktionen
             --> pytest: Feature-Engineering, Sliding-Window, Metrikberechnungen.
