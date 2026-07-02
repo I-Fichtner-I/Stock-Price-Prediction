@@ -1,0 +1,39 @@
+name: Sanity check
+
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install lint-only dependencies
+        run: pip install pyyaml nbformat
+
+      - name: Check Python syntax (.github/*.py)
+        run: python -m py_compile .github/*.py
+
+      - name: Validate notebook JSON
+        run: python -c "import nbformat; nbformat.read('NVIDIA_Kursprognose_LSTM.ipynb', as_version=4)"
+
+      - name: Validate workflow YAML syntax
+        run: |
+          python - <<'EOF'
+          import pathlib
+          import yaml
+
+          for path in pathlib.Path(".github/workflows").glob("*.yml"):
+              with path.open(encoding="utf-8") as f:
+                  yaml.safe_load(f)
+              print(f"OK: {path}")
+          EOF

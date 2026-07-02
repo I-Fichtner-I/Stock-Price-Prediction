@@ -428,6 +428,12 @@ Finance) vollständig aus, befüllt die README-Ergebnistabellen und öffnet
 automatisch einen Pull Request zur Prüfung. Manuell auslösbar über den
 Tab **Actions → Update metrics (notebook run) → Run workflow**.
 
+Zusätzlich prüft [`sanity-check.yml`](.github/workflows/sanity-check.yml)
+automatisch bei jedem Push/PR auf `main`, ob die `.github/*.py`-Skripte
+syntaktisch korrekt sind, das Notebook gültiges JSON ist und die
+Workflow-YAMLs valide sind — ohne Netzwerkzugriff oder schwere
+Abhängigkeiten (TensorFlow etc.).
+
 ### Reproduzierbarkeitsgarantien
 
 | Massnahme | Detail |
@@ -485,7 +491,7 @@ stock-price-prediction/
 ├── NVIDIA_Kursprognose_LSTM.ipynb   # Hauptabgabe — vollständiges Notebook
 ├── requirements.txt                  # Python-Abhängigkeiten (Kern)
 ├── .github/
-│   ├── workflows/                    # CI: automatische Notebook-Ausführung (update-metrics.yml)
+│   ├── workflows/                    # CI: Notebook-Ausführung, Daten-Snapshot, Sanity-Check bei jedem PR
 │   ├── _build_notebook.py            # Generator-Skript (reproduzierbare Zellstruktur)
 │   ├── _fetch_data.py                # Lädt CSV-Snapshot (data/nvda_ohlcv.csv)
 │   └── _update_readme_results.py     # Befüllt README-Tabellen (6.1, 6.3) aus results/*.csv
