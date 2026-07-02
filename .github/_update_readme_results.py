@@ -6,10 +6,10 @@ sodass `results/metrics_comparison.csv` und `results/stationarity_tests.csv`
 existieren.
 
 Nutzung:
-    python _build_notebook.py
+    python .github/_build_notebook.py
     jupyter nbconvert --to notebook --execute --inplace \
         --ExecutePreprocessor.timeout=1200 NVIDIA_Kursprognose_LSTM.ipynb
-    python _update_readme_results.py
+    python .github/_update_readme_results.py
 
 Idempotent: kann beliebig oft erneut ausgeführt werden, ersetzt jeweils nur
 den Inhalt zwischen den `<!-- AUTO-GENERATED:...:START/END -->`-Markern.
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 README_PATH = ROOT / "README.md"
 
 

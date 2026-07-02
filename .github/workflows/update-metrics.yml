@@ -29,7 +29,7 @@ jobs:
           pip install "tensorflow-cpu>=2.16.0" "shap>=0.45.0"
 
       - name: Regenerate notebook from generator script
-        run: python _build_notebook.py
+        run: python .github/_build_notebook.py
 
       - name: Execute notebook headlessly
         run: |
@@ -38,7 +38,7 @@ jobs:
             NVIDIA_Kursprognose_LSTM.ipynb
 
       - name: Fill README result tables from results/*.csv
-        run: python _update_readme_results.py
+        run: python .github/_update_readme_results.py
 
       - name: Open PR with updated notebook and README
         uses: peter-evans/create-pull-request@v6
@@ -51,7 +51,7 @@ jobs:
             - Notebook (`NVIDIA_Kursprognose_LSTM.ipynb`) einmal vollständig ausgeführt.
             - README-Tabellen in Abschnitt 6.1 (Modellvergleich) und 6.3
               (Stationaritätsanalyse) aus `results/metrics_comparison.csv` bzw.
-              `results/stationarity_tests.csv` befüllt (siehe `_update_readme_results.py`).
+              `results/stationarity_tests.csv` befüllt (siehe `.github/_update_readme_results.py`).
 
             Bitte vor dem Merge prüfen, ob `DATA_SOURCE == "yfinance"` (echte Kursdaten)
             und nicht der synthetische Fallback verwendet wurde (siehe README, Abschnitt 8).
