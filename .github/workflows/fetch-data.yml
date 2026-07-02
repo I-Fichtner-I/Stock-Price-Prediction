@@ -35,9 +35,9 @@ jobs:
           commit-message: "Update NVDA price data snapshot"
           title: "Aktualisierter Kursdaten-Snapshot (data/nvda_ohlcv.csv)"
           body: |
-            Automatisch erzeugt vom Workflow `fetch-data.yml`: lädt den in
-            `.github/_build_notebook.py` (Zelle 0.1) konfigurierten Ticker/Zeitraum
-            via `yfinance` neu und aktualisiert `data/nvda_ohlcv.csv`.
+            Automatisch erzeugt vom Workflow `fetch-data.yml`: lädt den im
+            Notebook (Zelle 0.1) konfigurierten Ticker/Zeitraum via `yfinance`
+            neu und aktualisiert `data/nvda_ohlcv.csv`.
 
             Dient als Offline-Fallback für `load_price_data()` im Notebook
             (siehe README, Abschnitt 8: Offline-Betrieb / Datenquellen-Fallback).
