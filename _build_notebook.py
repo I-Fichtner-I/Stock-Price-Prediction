@@ -1611,6 +1611,68 @@ in turbulenten Marktphasen höher sein dürfte.
 """)
 
 md(r"""
+### 7.2c  Residualdiagnose für das LSTM
+
+Ein gutes Prognosemodell sollte **weisses Rauschen** als Residuen hinterlassen:
+keine verbleibende Autokorrelation (sonst existiert noch ausschöpfbare Struktur)
+und – für die Gültigkeit der Bootstrap-Prognoseintervalle (Kap. 7.2b) – eine
+näherungsweise **symmetrische, normalverteilte** Fehlerverteilung.
+
+* **ACF/PACF der Testresiduen:** Balken ausserhalb des Konfidenzbandes deuten auf
+  verbleibende Autokorrelation hin.
+* **Ljung-Box-Test:** $H_0$: keine Autokorrelation bis Lag $k$.
+* **QQ-Plot:** Abweichungen von der Diagonalen zeigen Abweichungen von der
+  Normalverteilung (insb. „Fat Tails" wie schon bei den Renditen in Kap. 4.2).
+""")
+
+code(r"""
+resid_diag = y_test_price - lstm_pred
+
+fig, axes = plt.subplots(1, 2, figsize=(13, 4))
+plot_acf(resid_diag,  lags=30, ax=axes[0], title="ACF der LSTM-Testresiduen")
+plot_pacf(resid_diag, lags=30, ax=axes[1], title="PACF der LSTM-Testresiduen", method="ywm")
+plt.tight_layout(); plt.show()
+
+lb_resid = acorr_ljungbox(resid_diag, lags=[10, 20], return_df=True)
+print("=== Ljung-Box-Test auf LSTM-Testresiduen ===")
+print(lb_resid.round(4).to_string())
+for lag in lb_resid.index:
+    p = lb_resid.loc[lag, "lb_pvalue"]
+    verdict = "Autokorrelation vorhanden" if p < 0.05 else "kein Hinweis auf Autokorrelation"
+    print(f"  Lag {lag:>2}: p={p:.4g}  => {verdict}")
+""")
+
+code(r"""
+fig, axes = plt.subplots(1, 2, figsize=(13, 4.5))
+
+axes[0].hist(resid_diag, bins=30, color="steelblue", alpha=0.75, density=True)
+_x = np.linspace(resid_diag.min(), resid_diag.max(), 200)
+axes[0].plot(_x, stats.norm.pdf(_x, resid_diag.mean(), resid_diag.std()), "r--",
+             label="Normalverteilung")
+axes[0].set(title="Verteilung der LSTM-Testresiduen", xlabel="Residuum (USD)")
+axes[0].legend()
+
+stats.probplot(resid_diag, dist="norm", plot=axes[1])
+axes[1].set_title("QQ-Plot der LSTM-Testresiduen")
+plt.tight_layout(); plt.show()
+
+jb_resid = stats.jarque_bera(resid_diag)
+print(f"Residuen: Schiefe={stats.skew(resid_diag):.3f}  Kurtosis={stats.kurtosis(resid_diag):.3f}")
+print(f"Jarque-Bera-Test: Statistik={jb_resid[0]:.2f}, p={jb_resid[1]:.4g} "
+      f"-> Normalverteilung {'verworfen' if jb_resid[1] < 0.05 else 'nicht verworfen'}")
+""")
+
+md(r"""
+**Interpretation.** Verbleibende signifikante Autokorrelation (Ljung-Box
+verwirft $H_0$) wäre ein Hinweis, dass das LSTM systematisch ausschöpfbare
+Struktur übersieht. Abweichungen vom QQ-Plot bzw. ein signifikanter
+Jarque-Bera-Test relativieren die Bootstrap-Prognoseintervalle aus Kap. 7.2b:
+Diese unterstellen implizit i.i.d., nicht notwendig normalverteilte Residuen –
+bei starken Abweichungen wären modellbasierte (statt empirische) Intervalle
+mit Vorsicht zu interpretieren.
+""")
+
+md(r"""
 #### Overfitting-Prüfung: Trainings- vs. Testfehler
 
 Ein deutlich kleinerer Fehler auf den Trainings- als auf den Testdaten weist auf

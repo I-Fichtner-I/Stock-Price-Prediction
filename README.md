@@ -562,9 +562,9 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Export (stationarity_tests.csv) und Befüll-Skript stehen; Tabelle
                 selbst wird erst mit echten Daten final committet (s.o.).
 
-[ ] [M][M]  Residualdiagnose für LSTM ergänzen
-            --> ACF/PACF der Testresiduen, Ljung-Box-Test auf Autokorrelation.
-            --> Quantil-Quantil-Plot (QQ-Plot) für Normalverteilungsannahme.
+[x] [M][M]  Residualdiagnose für LSTM ergänzen
+            --> ACF/PACF der Testresiduen, Ljung-Box-Test auf Autokorrelation (Kap. 7.2c).
+            --> Quantil-Quantil-Plot (QQ-Plot) + Jarque-Bera für Normalverteilungsannahme.
 ```
 
 ---
