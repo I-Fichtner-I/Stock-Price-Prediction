@@ -420,22 +420,6 @@ python .github/_build_notebook.py
 python .github/_update_readme_results.py
 ```
 
-### Ausführung via Docker
-
-Für eine vollständig reproduzierbare Umgebung (unabhängig vom lokalen
-Python-Setup) steht ein `Dockerfile` bereit:
-
-```bash
-# Image bauen
-docker build -t stock-price-prediction .
-
-# Jupyter Notebook im Container starten (Port 8888)
-docker run --rm -p 8888:8888 stock-price-prediction
-```
-
-Der ausgegebene Link (inkl. Token) öffnet Jupyter im Browser; das Notebook
-läuft darin mit exakt den in `requirements.txt` gepinnten Abhängigkeiten.
-
 ### Automatische Aktualisierung via GitHub Actions
 
 Der Workflow [`update-metrics.yml`](.github/workflows/update-metrics.yml) führt
@@ -500,8 +484,6 @@ und öffnet einen Pull Request mit dem aktualisierten
 stock-price-prediction/
 ├── NVIDIA_Kursprognose_LSTM.ipynb   # Hauptabgabe — vollständiges Notebook
 ├── requirements.txt                  # Python-Abhängigkeiten (Kern)
-├── Dockerfile                        # Containerisierte, reproduzierbare Ausführung
-├── .dockerignore                     # Ausschlüsse für den Docker-Build-Kontext
 ├── .github/
 │   ├── workflows/                    # CI: automatische Notebook-Ausführung (update-metrics.yml)
 │   ├── _build_notebook.py            # Generator-Skript (reproduzierbare Zellstruktur)
