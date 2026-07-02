@@ -89,6 +89,21 @@ if hpo is not None:
 else:
     st.info("`lstm_hpo_results.csv` nicht gefunden (kein TensorFlow beim Notebook-Lauf).")
 
+hpo_r = load_results_csv("lstm_log_hpo_results.csv")
+if hpo_r is not None:
+    st.subheader("4b  LSTM-HPO — Log-Renditen-Modell (Kap. 6.5, eigene Suche)")
+    c1, c2 = st.columns([1, 1])
+    with c1:
+        st.dataframe(hpo_r.sort_values("Val_RMSE"), width='stretch')
+    with c2:
+        hpo_r_sorted = hpo_r.sort_values("Val_RMSE", ascending=False)
+        labels_r = hpo_r_sorted["Neuronen"].astype(str) + " · d" + hpo_r_sorted["Dropout"].astype(str)
+        fig_hpo_r = go.Figure(go.Bar(x=hpo_r_sorted["Val_RMSE"], y=labels_r, orientation="h",
+                                      marker_color="darkorange"))
+        fig_hpo_r.update_layout(height=300, title="Validierungs-RMSE je Konfiguration (Log-Rendite)",
+                                 xaxis_title="Val-RMSE (USD)")
+        st.plotly_chart(fig_hpo_r, width='stretch')
+
 # ── 5) Trading-Simulation ──────────────────────────────────────────────────────
 st.header("5  Trading-Simulation")
 strat = load_results_csv("trading_simulation.csv")
