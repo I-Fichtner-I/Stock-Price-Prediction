@@ -271,15 +271,15 @@ Fold 3:  [███████████████████████�
 
 <!-- AUTO-GENERATED:METRICS_TABLE:START -->
 ```
-Modell               │ MAE (USD) │ RMSE (USD) │ MAPE (%) │ Theil's U │ DA (%)
-─────────────────────┼───────────┼────────────┼──────────┼───────────┼──────────
-Naive Baseline       │     –     │      –     │    –     │   1.000   │  ~50.0
-Moving Average       │     –     │      –     │    –     │   > 1.0   │    –
-ARIMA/SARIMA         │     –     │      –     │    –     │   ~1.0    │    –
-LSTM (Niveau)        │     –     │      –     │    –     │   ~1.0    │    –
-LSTM (Log-Renditen)  │     –     │      –     │    –     │    –      │    –
-─────────────────────┴───────────┴────────────┴──────────┴───────────┴──────────
-Werte werden bei Notebook-Ausführung befüllt (→ results/metrics_comparison.csv)
+Modell               │ MAE (USD) │ RMSE (USD) │ MAPE (%) │ Theil´s U │ DA (%)
+─────────────────────┼───────────┼────────────┼──────────┼───────────┼────────
+Naive Baseline       │     2.029 │      2.927 │     2.24 │    1.0000 │      –
+Moving Average       │     5.645 │      7.539 │     6.36 │    2.5754 │      –
+ARIMA/SARIMA         │     2.034 │      2.921 │     2.25 │    0.9978 │      –
+LSTM (Niveau)        │    11.746 │     16.531 │    10.44 │    5.6469 │      –
+LSTM (Log-Renditen)  │     2.039 │      2.957 │     2.23 │    1.0101 │      –
+─────────────────────┴───────────┴────────────┴──────────┴───────────┴────────
+Automatisch befüllt aus results/metrics_comparison.csv (2026-07-02)
 ```
 <!-- AUTO-GENERATED:METRICS_TABLE:END -->
 
@@ -320,9 +320,9 @@ r_t = ln(P_t / P_{t-1})
 <!-- AUTO-GENERATED:STATIONARITY_TABLE:START -->
 | Zeitreihe | ADF p-Wert | KPSS-Befund | Schluss |
 |-----------|-----------|-------------|---------|
-| Close (Niveau) | > 0.05 | stationär abgelehnt | **nicht stationär** |
-| Log-Renditen | < 0.01 | stationär | **stationär** |
-| Einfache Renditen | < 0.01 | stationär | stationär |
+| Close (Niveau) | 1 | stationär abgelehnt | **nicht stationär** |
+| Log-Renditen | < 0.001 | stationär | **stationär** |
+| Einfache Renditen | < 0.001 | stationär | **stationär** |
 <!-- AUTO-GENERATED:STATIONARITY_TABLE:END -->
 
 *Wird automatisch aus `results/stationarity_tests.csv` befüllt — siehe
