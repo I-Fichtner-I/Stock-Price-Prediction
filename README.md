@@ -627,8 +627,9 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Feinere Zeitauflösung für kurzfristige Prognosen.
             --> Höheres Rauschen, aber potentiell stärkere Autokorrelationsstruktur.
 
-[ ] [N][S]  Erweiterung des Beobachtungszeitraums (ab 2015)
-            --> Schliesst weitere Marktregimes ein (GPU-Boom 2016/17, COVID-Crash).
+[x] [N][S]  Erweiterung des Beobachtungszeitraums (ab 2015)
+            --> Bereits Standard-Konfiguration (START_DATE = "2015-01-01" in Zelle 0.1),
+                schliesst GPU-Boom 2016/17 und COVID-Crash mit ein.
 ```
 
 ---
@@ -693,32 +694,36 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
 ### Priorisierungsmatrix
 
 ```
-              AUFWAND
-              Klein (S)       Mittel (M)       Gross (L)
+              AUFWAND                                     Stand nach Phase 1 + Teilen von 5:
+              Klein (S)       Mittel (M)       Gross (L)   erledigte Items sind hier entfernt
             ┌────────────────┬────────────────┬────────────────┐
-  HOCH  [H] │ Metriktabelle  │ Signifikanztests│ TFT/Transformer│
-            │ KPSS-Werte     │ XGBoost Baseline│                │
-            │ Konfidenzband  │ Sentiment-Feat. │                │
+  HOCH  [H] │ Metriktabelle~ │ XGBoost Baseline│ TFT/Transformer│
+            │ KPSS-Werte~    │ Sentiment-Feat. │                │
             │                │ Trading-Sim.    │                │
             │                │ Modularisierung │                │
             ├────────────────┼────────────────┼────────────────┤
-  MITTEL [M]│ Prophet        │ GRU-Vergleich  │ GRU (gross)    │
-            │ Random-Walk-   │ Multi-Step-FC  │ Intraday-Daten │
-            │ Benchmark      │ Makrodaten     │                │
+  MITTEL [M]│ –              │ GRU-Vergleich  │ GRU (gross)    │
+            │                │ Multi-Step-FC  │ Intraday-Daten │
+            │                │ Makrodaten     │                │
             │                │ Regime-Eval.   │                │
             │                │ Unit-Tests     │                │
-            │                │ Plotly-Viz.    │                │
             ├────────────────┼────────────────┼────────────────┤
-  NIEDRIG[N]│ Zeitraum-Ext.  │ Docker         │ MLflow         │
-            │                │                │                │
+  NIEDRIG[N]│ –              │ –              │ MLflow         │
             └────────────────┴────────────────┴────────────────┘
 
-  Empfohlene Startreihenfolge:
-  1. Metriktabelle befüllen (H/S) -- sofortiger Mehrwert, kein Aufwand
-  2. Konfidenzintervalle (H/S)    -- stärkt wissenschaftliche Aussagekraft
-  3. Signifikanztests (H/M)       -- ohne diese sind Vergleiche angreifbar
-  4. XGBoost Baseline (H/M)       -- klärt, ob Sequence-Modell überhaupt hilft
-  5. Sentiment-Features (H/M)     -- grösste potenzielle DA-Verbesserung
+  ~ = [~] in Arbeit: Automatisierung steht, wartet auf einen Notebook-Lauf mit
+      echten Marktdaten (z.B. via .github/workflows/update-metrics.yml).
+
+  Bereits erledigt (Phase 1 vollständig + Teile aus Phase 4/5): Signifikanztests,
+  Konfidenzintervalle, Residualdiagnose, Random-Walk-Benchmark, Docker-Container,
+  CI-Automatisierung, interaktive Plotly-Visualisierung, Beobachtungszeitraum ab 2015.
+
+  Empfohlene Startreihenfolge (Rest):
+  1. XGBoost Baseline (H/M)            -- klärt, ob Sequence-Modell überhaupt hilft
+  2. Sentiment-Features (H/M)          -- grösste potenzielle DA-Verbesserung
+  3. Modularisierung (H/M)             -- Voraussetzung für Unit-Tests (Phase 5)
+  4. Trading-Simulation ausbauen (H/M) -- realistischere ökonomische Bewertung
+  5. Transformer/TFT (H/L)             -- grösster Umbau, höchster Erkenntnisgewinn
 ```
 
 ---
