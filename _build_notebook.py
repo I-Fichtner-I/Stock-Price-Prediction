@@ -145,7 +145,7 @@ print(f"  LSTM-Kandidaten    : {len(LSTM_SEARCH_SPACE)} Konfigurationen")
 
 code(r"""
 # --- Kernbibliotheken -------------------------------------------------------
-import warnings, sys, random
+import warnings, sys, random, pathlib
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -266,8 +266,13 @@ def _synthetic_nvda(start, end, seed=SEED):
     df.index.name = "Date"
     return df
 
+def _data_dir():
+    _cwd = pathlib.Path.cwd()
+    return (_cwd / "notebooks" / "data") if (_cwd / "notebooks").is_dir() else (_cwd / "data")
+
 def load_price_data(ticker=TICKER, start=START_DATE, end=END_DATE):
-    """Lädt OHLCV-Daten von Yahoo Finance; fällt auf synthetische Daten zurück."""
+    """Lädt OHLCV-Daten von Yahoo Finance; Fallbacks: eingebettetes CSV-Snapshot,
+    dann synthetischer Ersatzdatensatz."""
     source = "synthetic"
     df = None
     try:
@@ -284,6 +289,17 @@ def load_price_data(ticker=TICKER, start=START_DATE, end=END_DATE):
             source = "yfinance"
     except Exception as e:
         print("yfinance-Download fehlgeschlagen:", e)
+
+    if df is None or len(df) == 0:
+        snapshot_path = _data_dir() / "nvda_ohlcv.csv"
+        if snapshot_path.is_file():
+            print(f"==> Kein Live-Zugriff auf Yahoo Finance -> verwende CSV-Snapshot: {snapshot_path}")
+            df = pd.read_csv(snapshot_path, index_col="Date", parse_dates=True)
+            df = df.loc[(df.index >= start) & (df.index <= end)]
+            if len(df) > 0:
+                source = "csv_snapshot"
+            else:
+                df = None
 
     if df is None or len(df) == 0:
         print("==> Verwende synthetischen Ersatzdatensatz (kein Netzwerk-/Datenzugriff).")

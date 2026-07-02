@@ -1,0 +1,46 @@
+name: Fetch NVDA price data
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: fetch-data
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal dependencies
+        run: pip install pandas yfinance
+
+      - name: Fetch price data snapshot
+        run: python _fetch_data.py
+
+      - name: Open PR with updated data snapshot
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Update NVDA price data snapshot"
+          title: "Aktualisierter Kursdaten-Snapshot (data/nvda_ohlcv.csv)"
+          body: |
+            Automatisch erzeugt vom Workflow `fetch-data.yml`: lädt den in
+            `_build_notebook.py` (Zelle 0.1) konfigurierten Ticker/Zeitraum
+            via `yfinance` neu und aktualisiert `data/nvda_ohlcv.csv`.
+
+            Dient als Offline-Fallback für `load_price_data()` im Notebook
+            (siehe README, Abschnitt 8: Offline-Betrieb / Datenquellen-Fallback).
+          branch: automated/update-data-snapshot
+          delete-branch: true
+          add-paths: |
+            data/nvda_ohlcv.csv
