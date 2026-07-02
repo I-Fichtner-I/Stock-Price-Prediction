@@ -546,12 +546,12 @@ Status:     [ ] Offen · [~] In Arbeit · [x] Erledigt
             --> Offen: einmal mit echten Yahoo-Finance-Daten ausführen und README
                 committen (in dieser Sandbox kein Netzwerkzugriff auf Yahoo Finance).
 
-[ ] [H][M]  Statistische Signifikanztests ergänzen
-            --> Diebold-Mariano-Test: prüft, ob LSTM-Fehler signifikant kleiner
-                als Baseline-Fehler (H0: gleiche Prognosegüte).
-            --> Wilcoxon-Vorzeichen-Rang-Test auf Residuen.
-            --> Implementierung: statsmodels.stats.diagnostic.acorr_ljungbox
-                bereits vorhanden; dm_test als eigenständige Funktion ergänzen.
+[x] [H][M]  Statistische Signifikanztests ergänzen
+            --> Diebold-Mariano-Test (Harvey/Leybourne/Newbold-korrigiert): prüft,
+                ob LSTM-Fehler signifikant kleiner als Baseline-Fehler sind
+                (H0: gleiche Prognosegüte). Neue Funktion diebold_mariano() (Kap. 7.1c).
+            --> Wilcoxon-Vorzeichen-Rang-Test auf |Fehler LSTM| vs. |Fehler Naiv|
+                (Kap. 7.1c), als nichtparametrische Robustheitsprüfung.
 
 [x] [H][S]  Konfidenzintervalle / Prognoseintervalle ausgeben
             --> Bootstrap-Methode auf LSTM-Residuen (1 000 Resamplings).

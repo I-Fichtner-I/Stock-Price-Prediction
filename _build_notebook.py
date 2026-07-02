@@ -1476,6 +1476,74 @@ Modell keine über den Zufall hinausgehende Struktur ausschöpft.
 """)
 
 md(r"""
+### 7.1c  Statistische Signifikanztests (LSTM vs. Naive Baseline)
+
+Ein niedrigerer RMSE allein belegt noch keinen **signifikanten** Unterschied in
+der Prognosegüte. Wir prüfen daher formal, ob sich die Fehler des LSTM
+signifikant von denen der naiven Baseline unterscheiden:
+
+* **Diebold-Mariano-Test** (parametrisch): $H_0$: gleiche erwartete Verlustdifferenz
+  ($E[d_t]=0$ mit $d_t = e_{\text{LSTM},t}^2 - e_{\text{Naiv},t}^2$). Wir verwenden
+  die Kleinstichprobenkorrektur nach Harvey, Leybourne & Newbold (1997).
+* **Wilcoxon-Vorzeichen-Rang-Test** (nichtparametrisch, robust gegenüber
+  Ausreißern/Nicht-Normalität): $H_0$: die absoluten Fehler beider Modelle stammen
+  aus derselben Verteilung (paarweiser Vergleich pro Testtag).
+""")
+
+code(r"""
+def diebold_mariano(e1, e2, h=1, power=2):
+    '''Diebold-Mariano-Test (Harvey/Leybourne/Newbold-korrigiert).
+    e1, e2: Fehlervektoren (y_true - y_pred) der beiden zu vergleichenden Modelle.
+    H0: gleiche Prognosegüte. Negative Statistik => Modell 1 (e1) ist besser.
+    Rückgabe: (DM-Statistik, p-Wert)
+    '''
+    d = np.abs(e1) ** power - np.abs(e2) ** power
+    n = len(d)
+    dbar = d.mean()
+
+    gamma0 = np.var(d, ddof=0)
+    var_d = gamma0
+    for lag in range(1, h):
+        cov = np.cov(d[lag:], d[:-lag])[0, 1]
+        var_d += 2 * (1 - lag / h) * cov
+    var_d /= n
+
+    dm_stat = dbar / np.sqrt(var_d)
+    hln = np.sqrt((n + 1 - 2 * h + h * (h - 1) / n) / n)   # Kleinstichprobenkorrektur
+    dm_stat_corr = dm_stat * hln
+    p_value = 2 * (1 - stats.t.cdf(np.abs(dm_stat_corr), df=n - 1))
+    return dm_stat_corr, p_value
+
+resid_lstm_sig  = y_test_price - lstm_pred
+resid_naive_sig = y_test_price - naive_pred
+
+dm_stat, dm_p = diebold_mariano(resid_lstm_sig, resid_naive_sig, h=1, power=2)
+print("=== Diebold-Mariano-Test (LSTM vs. Naiv, quadratischer Verlust) ===")
+print(f"  DM-Statistik : {dm_stat:.4f}")
+print(f"  p-Wert       : {dm_p:.4g}")
+if dm_p < 0.05:
+    dm_verdict = "LSTM signifikant besser" if dm_stat < 0 else "Naiv signifikant besser"
+else:
+    dm_verdict = "kein signifikanter Unterschied"
+print(f"  => {dm_verdict}  (alpha=0.05)\n")
+
+wstat, wp = stats.wilcoxon(np.abs(resid_lstm_sig), np.abs(resid_naive_sig))
+print("=== Wilcoxon-Vorzeichen-Rang-Test (|Fehler LSTM| vs. |Fehler Naiv|) ===")
+print(f"  Statistik : {wstat:.1f}")
+print(f"  p-Wert    : {wp:.4g}")
+w_verdict = "signifikanter Unterschied" if wp < 0.05 else "kein signifikanter Unterschied"
+print(f"  => {w_verdict}  (alpha=0.05)")
+""")
+
+md(r"""
+**Interpretation.** Nur wenn **beide** Tests $H_0$ zugunsten des LSTM verwerfen
+(p < 0.05, DM-Statistik < 0), ist die scheinbare Verbesserung gegenüber der
+naiven Baseline statistisch abgesichert und nicht bloß Stichprobenrauschen.
+Angesichts des in Kap. 8.3 diskutierten (nahezu) Random-Walk-Charakters der
+Kursreihe ist ein nicht-signifikantes Ergebnis hier der **erwartbare** Befund.
+""")
+
+md(r"""
 ### 7.2  Gegenüberstellung tatsächlicher und prognostizierter Kursverläufe
 """)
 
