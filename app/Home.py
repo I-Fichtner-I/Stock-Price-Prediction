@@ -22,7 +22,7 @@ BORDER = "rgba(255,255,255,0.09)"
 BORDER_ACCENT = "rgba(143,239,0,0.35)"
 TEXT_MUTED = "#8b93a1"
 
-st.markdown(
+st.html(
     f"""<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -68,16 +68,12 @@ st.markdown(
   .status-warn {{ color: #ffcc66; background: rgba(255,204,102,0.14); }}
   .status-bad {{ color: {BAD}; background: rgba(255,84,112,0.14); }}
   .status-card .caption {{ color: {TEXT_MUTED}; font-size: 0.8rem; }}
-</style>""",
-    unsafe_allow_html=True,
+</style>"""
 )
 
-st.markdown(
-    """
-<span class="ticker-badge"><span class="dot"></span>NVDA · NASDAQ · WEB-APP</span>
-<div class="hero-title">NVIDIA-Kursprognose — <span class="accent-text">Web-App</span></div>
-""",
-    unsafe_allow_html=True,
+st.html(
+    """<span class="ticker-badge"><span class="dot"></span>NVDA · NASDAQ · WEB-APP</span>
+<div class="hero-title">NVIDIA-Kursprognose — <span class="accent-text">Web-App</span></div>"""
 )
 
 st.markdown(
@@ -129,15 +125,12 @@ with col1:
         pill = '<span class="status-pill status-good">● Dashboard einsatzbereit</span>'
     else:
         pill = '<span class="status-pill status-warn">● Kein results/-Verzeichnis</span>'
-    st.markdown(
-        f"""
-<div class="status-card">
+    st.html(
+        f"""<div class="status-card">
   <h4>Status · Notebook-Ergebnisse</h4>
   {pill}
   <div class="caption">Erwarteter Pfad: {RESULTS_DIR}</div>
-</div>
-""",
-        unsafe_allow_html=True,
+</div>"""
     )
 
 with col2:
@@ -150,23 +143,17 @@ with col2:
         css_class, label = label_map[chart_source]
         last_close = float(chart_df["Close"].iloc[-1])
         last_date = chart_df.index[-1].date()
-        st.markdown(
-            f"""
-<div class="status-card">
+        st.html(
+            f"""<div class="status-card">
   <h4>Status · Live-Datenquelle</h4>
   <span class="status-pill {css_class}">{label}</span>
   <div class="caption">Letzter Kurs: ${last_close:.2f} USD ({last_date})</div>
-</div>
-""",
-            unsafe_allow_html=True,
+</div>"""
         )
     else:
-        st.markdown(
-            """
-<div class="status-card">
+        st.html(
+            """<div class="status-card">
   <h4>Status · Live-Datenquelle</h4>
   <span class="status-pill status-bad">● Datenquelle nicht verfügbar</span>
-</div>
-""",
-            unsafe_allow_html=True,
+</div>"""
         )
