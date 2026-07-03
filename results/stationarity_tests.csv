@@ -1,0 +1,4 @@
+Zeitreihe,ADF_stat,ADF_p,KPSS_stat,KPSS_p,Verdict
+Close (Niveau),3.157497898120468,1.0,4.522884423793488,0.01,NICHT STATIONÄR  (beide Tests übereinstimmend)
+Einfache Renditen,-16.294910024572218,3.310014262827091e-29,0.07945257540949938,0.1,STATIONÄR  (beide Tests übereinstimmend)
+Log-Renditen,-16.269477385638663,3.499806241265509e-29,0.08662633889227092,0.1,STATIONÄR  (beide Tests übereinstimmend)
