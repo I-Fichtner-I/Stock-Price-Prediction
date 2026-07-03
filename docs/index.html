@@ -100,11 +100,6 @@
     background: var(--bg-alt);
     color: var(--text);
   }
-  .btn[data-disabled="true"] {
-    opacity: 0.55;
-    cursor: not-allowed;
-    pointer-events: none;
-  }
 
   section { margin-top: 3rem; }
   h2 {
@@ -217,7 +212,7 @@
     <p class="subtitle">Am Beispiel der NVIDIA-Aktie — LSTM, ARIMA/SARIMA und naive Baselines im direkten Vergleich, mit vollständiger Reproduzierbarkeit, Stationaritätsanalyse und SHAP-Explainability.</p>
 
     <div class="cta-row">
-      <a class="btn btn-primary" id="app-link" href="#" data-disabled="true">🔴 Live-App öffnen</a>
+      <a class="btn btn-primary" id="app-link" href="https://stock-price-prediction-3kwvshvefadmjw5brsn4st.streamlit.app/" target="_blank" rel="noopener">🔴 Live-App öffnen</a>
       <a class="btn btn-secondary" href="https://github.com/I-Fichtner-I/Stock-Price-Prediction/blob/main/NVIDIA_Kursprognose_LSTM.ipynb">📓 Notebook ansehen</a>
       <a class="btn btn-secondary" href="https://github.com/I-Fichtner-I/Stock-Price-Prediction">💻 Quellcode (GitHub)</a>
     </div>
@@ -289,7 +284,7 @@
   <section>
     <h2>Live-App</h2>
     <p>Die Streamlit-App läuft nicht auf GitHub Pages (statisches Hosting, kein Python-Server) — sie wird stattdessen über <a href="https://streamlit.io/cloud" target="_blank" rel="noopener">Streamlit Community Cloud</a> direkt aus diesem Repository deployt und bei jedem Push automatisch aktualisiert.</p>
-    <p class="muted" id="app-status">🔗 Sobald die App deployt ist, verlinkt der Button oben direkt dorthin.</p>
+    <p class="muted" id="app-status">🔗 Läuft live unter <a href="https://stock-price-prediction-3kwvshvefadmjw5brsn4st.streamlit.app/" target="_blank" rel="noopener">stock-price-prediction-3kwvshvefadmjw5brsn4st.streamlit.app</a>.</p>
   </section>
 
   <footer>
