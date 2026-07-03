@@ -31,9 +31,12 @@ Die App öffnet sich im Browser (Standard: http://localhost:8501).
 
 - **Keine Anlageberatung.** Beide Seiten dienen ausschließlich der
   wissenschaftlichen Illustration der im Notebook entwickelten Methodik.
-- Das Dashboard liest `results/*.csv` relativ zum Repository-Root — diese
-  Dateien werden nicht mitversioniert (siehe `.gitignore`), sondern bei
-  Notebook-Ausführung neu erzeugt.
+- Das Dashboard liest `results/*.csv` relativ zum Repository-Root. Diese
+  Dateien sind als Snapshot des letzten `update-metrics.yml`-Laufs im Repo
+  committet (analog zu `data/nvda_ohlcv.csv`) — sonst hätte z. B. eine
+  Streamlit-Community-Cloud-Deployment kein Dashboard, da dort kein
+  lokaler Notebook-Lauf möglich ist. Bei einer eigenen lokalen
+  Notebook-Ausführung werden sie einfach überschrieben.
 - Die Live-Prognose funktioniert auch ohne Netzwerkzugriff (Fallback auf
   `data/nvda_ohlcv.csv` bzw. synthetische Daten), liefert dann aber keine
   aktuellen Werte.

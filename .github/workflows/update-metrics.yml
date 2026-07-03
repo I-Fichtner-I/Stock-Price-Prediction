@@ -49,6 +49,10 @@ jobs:
             - README-Tabellen in Abschnitt 6.1 (Modellvergleich) und 6.3
               (Stationaritätsanalyse) aus `results/metrics_comparison.csv` bzw.
               `results/stationarity_tests.csv` befüllt (siehe `.github/_update_readme_results.py`).
+            - `results/*.csv` (und ggf. `results/interactive_forecast.html`) als
+              Snapshot committet, damit das Streamlit-Dashboard (z. B. auf Streamlit
+              Community Cloud, wo kein lokaler Notebook-Lauf möglich ist) sofort
+              Daten anzeigen kann.
 
             Bitte vor dem Merge prüfen, ob `DATA_SOURCE == "yfinance"` (echte Kursdaten)
             und nicht der synthetische Fallback verwendet wurde (siehe README, Abschnitt 8).
@@ -57,3 +61,4 @@ jobs:
           add-paths: |
             NVIDIA_Kursprognose_LSTM.ipynb
             README.md
+            results
