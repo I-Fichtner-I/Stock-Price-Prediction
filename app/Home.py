@@ -8,7 +8,7 @@ st.set_page_config(page_title="NVDA Kursprognose", page_icon="📈", layout="wid
 st.title("📈 NVIDIA-Kursprognose — Web-App")
 st.markdown(
     """
-Begleit-App zum Notebook [`NVIDIA_Kursprognose_LSTM.ipynb`](../NVIDIA_Kursprognose_LSTM.ipynb).
+Begleit-App zum Notebook [`NVIDIA_Kursprognose_LSTM.ipynb`](https://github.com/I-Fichtner-I/Stock-Price-Prediction/blob/main/NVIDIA_Kursprognose_LSTM.ipynb).
 Zwei Ansichten stehen zur Verfügung (siehe Seitenleiste):
 
 - **📊 Dashboard** — visualisiert die Ergebnisse eines Notebook-Laufs
@@ -17,7 +17,7 @@ Zwei Ansichten stehen zur Verfügung (siehe Seitenleiste):
   Prognose in Echtzeit (Naive Baseline + live gefittetes ARIMA).
 
 > **Hinweis:** Diese App dient der Illustration und ist **keine
-> Anlageberatung**. Details zur Methodik siehe [README](../README.md).
+> Anlageberatung**. Details zur Methodik siehe [README](https://github.com/I-Fichtner-I/Stock-Price-Prediction#readme).
 """
 )
 
