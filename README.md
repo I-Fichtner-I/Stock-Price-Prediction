@@ -552,6 +552,10 @@ stock-price-prediction/
 
 ---
 
-*Alle Visualisierungen, Metriken und Modellgewichte werden bei der Ausführung
-des Notebooks generiert. Sie sind nicht Teil des Repository.*
+*Alle Visualisierungen und Modellgewichte werden bei der Ausführung des
+Notebooks generiert und sind nicht Teil des Repository. Die tabellarischen
+Metriken in `results/*.csv` sind hingegen als Snapshot des letzten
+`update-metrics.yml`-Laufs committet, damit das Streamlit-Dashboard auch
+ohne lokalen Notebook-Lauf (z. B. im Cloud-Deployment) Daten anzeigen kann;
+sie werden bei jeder eigenen Notebook-Ausführung überschrieben.*
 
