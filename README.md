@@ -4,6 +4,10 @@
 > **Seminar-/Termpaper-Notebook** · Reproduzierbares Python-Experiment ·
 > Zeitreihenanalyse & Deep Learning
 
+🌐 [**Live-Demo**](https://i-fichtner-i.github.io/Stock-Price-Prediction/) ·
+🔴 [**Streamlit-App**](https://stock-price-prediction-3kwvshvefadmjw5brsn4st.streamlit.app/) ·
+📓 [**Notebook**](NVIDIA_Kursprognose_LSTM.ipynb)
+
 ---
 
 ## Inhaltsverzeichnis
@@ -487,6 +491,11 @@ eines Notebook-Laufs visualisiert, sowie eine **Live-Prognose**, die aktuelle
 Kursdaten lädt und in Echtzeit eine Naive-/ARIMA-Prognose erstellt (das LSTM
 wird dort bewusst nicht verwendet — siehe [`app/README.md`](app/README.md)
 für die Begründung und Startanleitung).
+
+- 🌐 **Live-Demo:** [i-fichtner-i.github.io/Stock-Price-Prediction](https://i-fichtner-i.github.io/Stock-Price-Prediction/)
+  (Landingpage mit Modellvergleich, verlinkt zur laufenden App)
+- 🔴 **App direkt öffnen:** [stock-price-prediction-3kwvshvefadmjw5brsn4st.streamlit.app](https://stock-price-prediction-3kwvshvefadmjw5brsn4st.streamlit.app/)
+  (Streamlit Community Cloud, deployt direkt aus diesem Repository)
 
 ```bash
 pip install -r requirements.txt -r app/requirements.txt
