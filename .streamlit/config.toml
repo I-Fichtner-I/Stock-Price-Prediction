@@ -1,0 +1,11 @@
+# Quant-Terminal-Theme, passend zur GitHub-Pages-Landingpage (docs/index.html).
+[theme]
+base = "dark"
+primaryColor = "#8fef00"
+backgroundColor = "#05070a"
+secondaryBackgroundColor = "#11151c"
+textColor = "#eef1f4"
+font = "monospace"
+
+[browser]
+gatherUsageStats = false
