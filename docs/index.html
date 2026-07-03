@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NVIDIA-Kursprognose — Zeitreihenanalyse &amp; Deep Learning</title>
+<meta name="description" content="Prognose von Aktienkursen mittels maschinellen Lernens am Beispiel der NVIDIA-Aktie: LSTM, ARIMA/SARIMA und Baselines.">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff;
+    --bg-alt: #f6f7f9;
+    --text: #1a1d23;
+    --text-muted: #5b6270;
+    --border: #e3e5e9;
+    --accent: #76b900; /* NVIDIA green */
+    --accent-text: #14210a;
+    --good: #1a7f37;
+    --bad: #cf222e;
+    --code-bg: #0f1115;
+    --code-text: #e6e8eb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115;
+      --bg-alt: #171a20;
+      --text: #e8eaed;
+      --text-muted: #9aa1ac;
+      --border: #2a2e37;
+      --good: #4ac26b;
+      --bad: #f0616d;
+      --code-bg: #0a0c0f;
+      --code-text: #dfe3e8;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  main {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 5rem;
+  }
+  header.hero {
+    margin-bottom: 2.5rem;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    margin-bottom: 0.9rem;
+  }
+  h1 {
+    font-size: clamp(1.7rem, 4vw, 2.4rem);
+    line-height: 1.2;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.01em;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    max-width: 60ch;
+  }
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.65rem 1.1rem;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: transform 0.12s ease, border-color 0.12s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+  .btn-secondary {
+    background: var(--bg-alt);
+    color: var(--text);
+  }
+  .btn[data-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  section { margin-top: 3rem; }
+  h2 {
+    font-size: 1.3rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
+  }
+  p { color: var(--text); }
+  .muted { color: var(--text-muted); font-size: 0.92rem; }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .card {
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.1rem 1.2rem;
+  }
+  .card h3 {
+    margin: 0 0 0.35rem;
+    font-size: 0.95rem;
+  }
+  .card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 1rem;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 640px;
+    font-size: 0.88rem;
+  }
+  th, td {
+    text-align: right;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  th:first-child, td:first-child { text-align: left; }
+  thead th {
+    background: var(--bg-alt);
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr.highlight td { font-weight: 600; }
+  .tag {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  .tag-good { color: var(--good); background: color-mix(in srgb, var(--good) 16%, transparent); }
+  .tag-bad { color: var(--bad); background: color-mix(in srgb, var(--bad) 16%, transparent); }
+
+  .finding {
+    background: var(--bg-alt);
+    border-left: 3px solid var(--accent);
+    border-radius: 6px;
+    padding: 0.9rem 1.1rem;
+    margin-top: 1.2rem;
+    font-size: 0.93rem;
+  }
+  code {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.85em;
+  }
+
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  footer a { color: var(--text-muted); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+
+  <header class="hero">
+    <span class="eyebrow">Seminar-/Termpaper-Notebook</span>
+    <h1>Prognose von Aktienkursen mittels maschinellen Lernens</h1>
+    <p class="subtitle">Am Beispiel der NVIDIA-Aktie — LSTM, ARIMA/SARIMA und naive Baselines im direkten Vergleich, mit vollständiger Reproduzierbarkeit, Stationaritätsanalyse und SHAP-Explainability.</p>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" id="app-link" href="#" data-disabled="true">🔴 Live-App öffnen</a>
+      <a class="btn btn-secondary" href="https://github.com/I-Fichtner-I/Stock-Price-Prediction/blob/main/NVIDIA_Kursprognose_LSTM.ipynb">📓 Notebook ansehen</a>
+      <a class="btn btn-secondary" href="https://github.com/I-Fichtner-I/Stock-Price-Prediction">💻 Quellcode (GitHub)</a>
+    </div>
+  </header>
+
+  <section>
+    <h2>Was steckt dahinter?</h2>
+    <div class="card-grid">
+      <div class="card">
+        <h3>📊 Notebook</h3>
+        <p>Vollständige Pipeline: Datenaufbereitung, EDA, Stationaritätstests, Feature Engineering, ARIMA/SARIMA mit AIC-Suche, LSTM mit eigenständiger Hyperparameter-Optimierung, SHAP-Explainability, Trading-Simulation.</p>
+      </div>
+      <div class="card">
+        <h3>🖥️ Streamlit-App</h3>
+        <p>Dashboard zur Visualisierung der Notebook-Ergebnisse und eine Live-Prognose-Seite mit aktuellen Kursdaten (Naive + live gefittetes ARIMA).</p>
+      </div>
+      <div class="card">
+        <h3>🔁 Reproduzierbar</h3>
+        <p>Fester Seed, chronologischer Split ohne Data Leakage, automatischer CSV-Snapshot-Fallback für Offline-Ausführung — via GitHub Actions selbst aktualisiert.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Modellvergleich (Testmenge)</h2>
+    <p class="muted">Automatisch aus dem letzten vollständigen Notebook-Lauf übernommen (echte <code>yfinance</code>-Daten, kein synthetischer Fallback).</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Modell</th>
+            <th>MAE (USD)</th>
+            <th>RMSE (USD)</th>
+            <th>MAPE</th>
+            <th>R²</th>
+            <th>Theil's U</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td>Naive Baseline</td><td>2.029</td><td>2.927</td><td>2.24 %</td><td>0.9936</td>
+            <td><span class="tag tag-good">1.000</span></td>
+          </tr>
+          <tr class="highlight">
+            <td>ARIMA/SARIMA</td><td>2.060</td><td>2.952</td><td>2.27 %</td><td>0.9935</td>
+            <td><span class="tag tag-good">1.009</span></td>
+          </tr>
+          <tr>
+            <td>LSTM (Log-Renditen)</td><td>2.267</td><td>3.302</td><td>2.44 %</td><td>0.9918</td>
+            <td><span class="tag tag-good">1.128</span></td>
+          </tr>
+          <tr>
+            <td>Moving Average</td><td>5.645</td><td>7.539</td><td>6.36 %</td><td>0.9575</td>
+            <td><span class="tag tag-bad">2.575</span></td>
+          </tr>
+          <tr>
+            <td>LSTM (Niveau)</td><td>11.746</td><td>16.531</td><td>10.44 %</td><td>0.7955</td>
+            <td><span class="tag tag-bad">5.647</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="finding">
+      <strong>Kernbefund:</strong> Naive Baseline und ARIMA/SARIMA sind statistisch praktisch nicht zu unterscheiden (Theil's&nbsp;U&nbsp;≈&nbsp;1) — klassische schwache Markteffizienz. Ein LSTM auf dem rohen Kursniveau lernt vor allem, den Vortageswert zu reproduzieren (<em>Lag-Phänomen</em>, Theil's&nbsp;U&nbsp;=&nbsp;5.6, trotz täuschend hohem R²&nbsp;=&nbsp;0.80). Erst auf stationären Log-Renditen trainiert wird das LSTM wieder konkurrenzfähig zur naiven Baseline.
+    </div>
+  </section>
+
+  <section>
+    <h2>Live-App</h2>
+    <p>Die Streamlit-App läuft nicht auf GitHub Pages (statisches Hosting, kein Python-Server) — sie wird stattdessen über <a href="https://streamlit.io/cloud" target="_blank" rel="noopener">Streamlit Community Cloud</a> direkt aus diesem Repository deployt und bei jedem Push automatisch aktualisiert.</p>
+    <p class="muted" id="app-status">🔗 Sobald die App deployt ist, verlinkt der Button oben direkt dorthin.</p>
+  </section>
+
+  <footer>
+    <span>Quellcode &amp; Dokumentation: <a href="https://github.com/I-Fichtner-I/Stock-Price-Prediction">github.com/I-Fichtner-I/Stock-Price-Prediction</a></span>
+    <span>Keine Anlageberatung — wissenschaftliche Illustration.</span>
+  </footer>
+
+</main>
+</body>
+</html>
